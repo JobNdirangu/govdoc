@@ -1,6 +1,12 @@
 {% extends 'home/base.html' %}
 
 {% block content %}
+{%load static%}
+<link rel="stylesheet" href="{% static 'pdfjs/pdf_viewer.css' %}">
+<script src="{% static 'pdfjs/pdf.js' %}"></script>
+<script src="{% static 'pdfjs/viewer.js' %}"></script>
+
+
 <style>
     .anchor {
         background-color: #0e2238;
@@ -36,12 +42,12 @@
 
 
 <div class="embed-responsive embed-responsive-16by9" style="height: 80vh;">
-    <embed 
-        src="media/document/waiver.pdf" 
-        type="application/pdf" 
+    <iframe 
+        src="{% static 'pdfjs/viewer.html' %}?file={{ file_url }}" 
         style="width: 100%; height: 100%; border: none;" 
-    />
+    ></iframe>
 </div>
+
 
 <a href="{% url 'document_list' %}" class="btn-custom bg-primary mt-3">Back to Documents</a>
 {% endblock %}

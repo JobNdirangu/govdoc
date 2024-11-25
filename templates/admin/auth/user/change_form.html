@@ -1,0 +1,40 @@
+{% extends "user_management/base_site.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Edit User</h1>
+    <form method="post" enctype="multipart/form-data">{% csrf_token %}
+        <div class="form-group">
+            <label for="id_username">Username:</label>
+            <input type="text" name="username" value="{{ form.username.value }}" class="form-control" id="id_username" required>
+        </div>
+
+        <div class="form-group">
+            <label for="id_first_name">First Name:</label>
+            <input type="text" name="first_name" value="{{ form.first_name.value }}" class="form-control" id="id_first_name">
+        </div>
+
+        <div class="form-group">
+            <label for="id_last_name">Last Name:</label>
+            <input type="text" name="last_name" value="{{ form.last_name.value }}" class="form-control" id="id_last_name">
+        </div>
+
+        <div class="form-group">
+            <label for="id_email">Email Address:</label>
+            <input type="email" name="email" value="{{ form.email.value }}" class="form-control" id="id_email">
+        </div>
+
+        <div class="form-group form-check">
+            <label for="id_is_staff">Staff Status:</label>
+            <input type="checkbox" name="is_staff" id="id_is_staff" {% if form.is_staff.value %}checked{% endif %} class="form-check-input">
+        </div>
+
+        <div class="form-group form-check">
+            <label for="id_is_active">Active Status:</label>
+            <input type="checkbox" name="is_active" id="id_is_active" {% if form.is_active.value %}checked{% endif %} class="form-check-input">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save</button>
+    </form>
+</div>
+{% endblock %}

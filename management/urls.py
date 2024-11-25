@@ -15,7 +15,7 @@ urlpatterns = [
     
     # Open document
     path('document/download/<int:pk>/', views.document_download, name='document_download'),
-    path('document/view/', views.document_view, name='document_view'),
+    path('document/view/<int:pk>/', views.document_view, name='document_view'),
     path('document/open/<int:pk>/', views.document_open, name='document_open'),
 
     # Notifications

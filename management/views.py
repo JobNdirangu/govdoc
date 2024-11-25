@@ -31,6 +31,8 @@ from transformers import pipeline
 from django.http import FileResponse
 import fitz  # PyMuPDF
 from transformers import pipeline
+from urllib.parse import unquote
+
 
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'  # Disable oneDNN custom ops
 import tensorflow as tf
@@ -42,7 +44,16 @@ def custom_403_view(request, exception=None):
 
 @login_required
 def dashboard(request):
-    return render(request, 'home/dashboard.html')
+    documents = Document.objects.all().order_by('-upload_date')
+    recent = Document.objects.all().order_by('-upload_date')[:5]
+    paginator = Paginator(documents, 10)  
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    for index, documents in enumerate(page_obj.object_list):
+        documents.serial_number = index + 1 + (page_obj.number - 1) * paginator.per_page
+
+    return render(request, 'home/dashboard.html',{'page_obj': page_obj, 'recent':recent})
 
 # View all documents
 @login_required
@@ -60,24 +71,16 @@ def document_list(request):
 # Download Document
 @login_required
 def document_download(request, pk):
-    # Get the document object
     document = get_object_or_404(Document, pk=pk)
-    
-    # Get the file path
     file_path = document.file.path
-
-    # Check if the file exists
     if not os.path.exists(file_path):
-        raise Http404("File not found")
-    
+        raise Http404("File not found")    
     try:
-        # Open the file and return it as an attachment (download)
         with open(file_path, 'rb') as file:
             response = FileResponse(file, as_attachment=True, filename=document.file.name)
             response['Content-Type'] = 'application/pdf'  # Optional, change based on file type
             return response
     except Exception as e:
-        # Handle error opening file
         raise Http404(f"Error opening file: {str(e)}")
     
 import mimetypes
@@ -98,23 +101,18 @@ def document_open(request, pk):
     return response
 
 
-from urllib.parse import unquote
-
-# @login_required
-# def document_view(request, pk):
-#     document = get_object_or_404(Document, pk=pk)
-#     file_url = unquote(document.file.url)    
-#     ActionLog.objects.create(
-#         document=document,
-#         action_by=request.user,
-#         action='Viewed',
-#         comments="Document has been opened"
-#     )
-#     return render(request, 'documents/document_view.html', {'document': document, 'file_url': file_url})
-
 @login_required
-def document_view(request):        
-    return render(request, 'documents/document_view.html')
+def document_view(request, pk):
+    document = get_object_or_404(Document, pk=pk)
+    file_url = unquote(document.file.url)    
+    ActionLog.objects.create(
+        document=document,
+        action_by=request.user,
+        action='Viewed in System',
+        comments="Document has been opened"
+    )
+    return render(request, 'documents/document_view.html', {'document': document, 'file_url': file_url})
+
 
 # @login_required
 # def document_view(request, pk):
@@ -133,7 +131,7 @@ def document_detail(request, pk):
     ActionLog.objects.create(
         document=document,
         action_by=request.user,
-        action='Viewed',
+        action='Viewed Details',
         comments="Document details viewed"
     )
     return render(request, 'documents/document_detail.html', {
@@ -142,17 +140,6 @@ def document_detail(request, pk):
         'workflows': workflows,
     })
 
-# def document_detail(request, pk):
-#     document = get_object_or_404(Document, pk=pk)
-#     related_documents = RelatedDocument.objects.filter(document=document)
-#     workflows = DocumentWorkflow.objects.filter(document=document)
-    
-#     context = {
-#         'document': document,
-#         'related_documents': related_documents,
-#         'workflows': workflows,
-#     }
-#     return render(request, 'document_detail.html', context)
 
 @login_required
 def upload_document(request):
@@ -212,18 +199,13 @@ def update_workflow(request, pk):
         form = WorkflowForm()
     return render(request, 'documents/update_workflow.html', {'form': form, 'document': document})
 
-def document_audit_log(request, doc_id):
-    document = get_object_or_404(Document, id=doc_id)
-    audit_logs = AuditLog.objects.filter(document=document).order_by('-timestamp')
-
-    return render(request, 'document_audit_log.html', {'document': document, 'audit_logs': audit_logs})
-
+# Theme settings
 @login_required
 def company_settings_view(request):
     setting, created = CompanySetting.objects.get_or_create(id=1)
     print(timezone.now())
     # print(pytz.all_timezones)
-    if not request.user.has_perm('WineManagement.change_companysetting'):
+    if not request.user.has_perm('management.change_companysetting'):
         messages.error(request, 'You Do Not Have Permission to Change Company Settings')
         form = CompanySettingForm(instance=setting)
         theme_choice = setting.theme_choice
@@ -237,10 +219,10 @@ def company_settings_view(request):
             return redirect('company_settings')  # Make sure this is defined in your URL patterns
     else:
         form = CompanySettingForm(instance=setting)
-    # Explicitly pass theme_choice to the template to confirm it’s accessible
     theme_choice = setting.theme_choice
 
     return render(request, 'home/company_settings.html', {'form': form, 'theme_choice': theme_choice})
+
 #  Notifications
 @login_required
 def notifications(request):
@@ -271,59 +253,53 @@ def clear_notifications(request):
 
 
 # Initialize the summarization pipeline
-# summarizer = pipeline("summarization")
+summarizer = pipeline("summarization")
 
-# def summarize_pdf(request, document_id):
-#     document = get_object_or_404(Document, pk=document_id)
-#     pdf_path = document.file.path  
-#     text = extract_text_from_pdf(pdf_path)
-#     summary = summarize_text(text)
-#     print(summary)
-#     ActionLog.objects.create(
-#         document=document,
-#         action_by=request.user,
-#         action='Summarized',
-#         comments="Summary generated"
-#     )
+def summarize_pdf(request, document_id):
+    document = get_object_or_404(Document, pk=document_id)
+    pdf_path = document.file.path  
+    text = extract_text_from_pdf(pdf_path)
+    summary = summarize_text(text)
+    print(summary)
+    ActionLog.objects.create(
+        document=document,
+        action_by=request.user,
+        action='Summarized',
+        comments="Summary generated"
+    )
 
-#     return render(request, 'documents/document_summary.html', {'summary': summary})
+    return render(request, 'documents/document_summary.html', {'summary': summary})
 
-# def extract_text_from_pdf(pdf_path):
-#     # Extract text from each page of the PDF
-#     doc = fitz.open(pdf_path)
-#     text = ""
-#     for page_num in range(doc.page_count):
-#         page = doc.load_page(page_num)
-#         text += page.get_text()
-#     return text
+def extract_text_from_pdf(pdf_path):
+    # Extract text from each page of the PDF
+    doc = fitz.open(pdf_path)
+    text = ""
+    for page_num in range(doc.page_count):
+        page = doc.load_page(page_num)
+        text += page.get_text()
+    return text
 
-# def summarize_text(text):
-#     # Split text into chunks that fit within the model's token limit (e.g., 1024 tokens)
-#     max_input_length = 1024
-#     chunk_size = max_input_length // 2  # Adjust chunk size for safe margin
-#     text_chunks = [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
+def summarize_text(text):
+    max_input_length = 1024
+    chunk_size = max_input_length // 2  
+    text_chunks = [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
     
-#     summary = ""
-#     for chunk in text_chunks:
-#         # Summarize each chunk separately
-#         chunk_summary = summarizer(chunk, max_length=100, min_length=50, do_sample=False)
-#         summary += chunk_summary[0]['summary_text'] + " "
-#     return summary
+    summary = ""
+    for chunk in text_chunks:
+        chunk_summary = summarizer(chunk, max_length=100, min_length=50, do_sample=False)
+        summary += chunk_summary[0]['summary_text'] + " "
+    return summary
 
 
 
 
 
 # def summarize_text(text):
-#     # Handle very short text
-#     if len(text.split()) < 10:  # If there are fewer than 10 words, skip summarization
+#     if len(text.split()) < 10:  
 #         return "Text too short to summarize"
 
-#     # Adjust max_length as needed
 #     input_length = len(text.split())
 #     max_length = min(input_length // 5, 100)
-
-#     # Use the summarizer to generate a summary
 #     summary = summarizer(text, max_length=max_length, min_length=50, do_sample=False)
 #     print(summary)
 #     return summary[0]['summary_text']

@@ -1,9 +1,32 @@
 {% extends 'user_management/base_user.html' %}
 
 {% block content %}
+<style>
+    .anchor {
+        background-color: #0e2238;
+        color: aliceblue;
+    }
+    .anchor:hover {
+        background-color: #204267;
+        color: aliceblue;
+    }
+    .btn-custom {
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #0a1a2e;
+        color: #fff;
+        font-size: 12px;
+        cursor: pointer;
+        display: inline-block !important;
+    }
+    .btn:hover {
+        background-color: #204267;
+    }
+</style>
 <div class="container mt-4">
     <h1>Groups</h1>
-    <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addGroupModal">Add Group</button>
+    <button class="btn-custom bg-deepprimary mb-3" data-bs-toggle="modal" data-bs-target="#addGroupModal">Add Group</button>
     <table class="table table-striped">
         <thead>
             <tr>
@@ -20,7 +43,7 @@
                 <td>
                     <!-- Edit Button -->
                     <button 
-                        class="btn btn-primary btn-sm" 
+                        class="btn-custom bg-primary btn-sm" 
                         data-bs-toggle="modal" 
                         data-bs-target="#editGroupModal{{ group.id }}">
                         Edit
@@ -29,7 +52,7 @@
                     <!-- Delete Button -->
                     <form method="post" action="{% url 'group_delete' group.id %}" style="display:inline;">
                         {% csrf_token %}
-                        <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+                        <button class="btn-custom bg-danger btn-sm" type="submit">Delete</button>
                     </form>
                 </td>
             </tr>
@@ -51,8 +74,8 @@
                                 </div>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                                <button type="button" class="btn-custom bg-danger" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn-custom bg-primary">Save Changes</button>
                             </div>
                         </form>
                     </div>
@@ -80,8 +103,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">Add Group</button>
+                    <button type="button" class="btn-custom bg-danger" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-custom bg-primary">Add Group</button>
                 </div>
             </form>
         </div>
