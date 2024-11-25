@@ -1,10 +1,19 @@
 from django.contrib.auth.models import User,Group
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm,UserChangeForm
 from django.shortcuts import get_object_or_404
 
 
+def dashboard_users(request):
+    user_count = User.objects.count()
+    group_count = Group.objects.count()
+
+    context = {
+        'user_count': user_count,
+        'group_count': group_count,
+    }
+    return render(request, 'user_management/dashboard.html', context)
 
 
 def user_list(request):
@@ -48,13 +57,12 @@ def group_list(request):
     groups = Group.objects.all()
     return render(request, 'user_management/group_list.html', {'groups': groups})
 
-
 def group_add(request):
     if request.method == 'POST':
         name = request.POST.get('name')
-        group = Group.objects.create(name=name)
+        Group.objects.create(name=name)
         return redirect('group_list')
-    return render(request, 'user_management/group_form.html')
+
 
 def group_edit(request, pk):
     group = get_object_or_404(Group, pk=pk)
@@ -62,9 +70,9 @@ def group_edit(request, pk):
         group.name = request.POST.get('name')
         group.save()
         return redirect('group_list')
-    return render(request, 'user_management/group_form.html', {'group': group})
 
 def group_delete(request, pk):
     group = get_object_or_404(Group, pk=pk)
     group.delete()
     return redirect('group_list')
+

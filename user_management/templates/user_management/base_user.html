@@ -47,45 +47,26 @@
             </div>
             <ul class="sidebar-nav">
                 <li class="sidebar-item">
-                    <a href="{% url 'dashboard' %}" class="sidebar-link">
+                    <a href="{% url 'dashboard_users' %}" class="sidebar-link">
                         <i class="lni lni-dashboard"></i>
                         <span>Dashboard</span>
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="{% url 'document_list' %}" class="sidebar-link">
-                        <i class="lni lni-files"></i>
-                        <span>Documents</span>
+                    <a href="{% url 'group_list' %}" class="sidebar-link">
+                        <i class="lni lni-users"></i>
+                        <span>Groups</span>
                     </a>
                 </li>
-                <li class="sidebar-item">
-                    <a href="#ManageProduct" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
-                        data-bs-target="#manageProduct" aria-expanded="false" aria-controls="manageProduct">
-                        <i class="lni lni-package"></i>
-                        <span>Manage Products</span>
-                    </a>
-                    <ul id="manageProduct" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
-                        <li class="sidebar-item ms-3">
-                            <a href="{% url 'dashboard' %}" class="sidebar-link"><i class="lni lni-display"></i>Products</a>
-                        </li>
-                        <li class="sidebar-item ms-3">
-                            <a href="{% url 'dashboard' %}" class="sidebar-link"><i class="lni lni-book"></i>Price Book</a>
-                        </li>
-                    </ul>
-                </li>
+                
                 <li class="sidebar-item">
                     <a href="{% url 'user_list' %}" class="sidebar-link">
-                        <i class="lni lni-users"></i>
+                        <i class="lni lni-user"></i>
                         <span>Users</span>
                     </a>
                 </li>
                                                              
-                <li class="sidebar-item">
-                    <a href="{% url 'company_settings' %}" class="sidebar-link">
-                        <i class="lni lni-cog"></i>
-                        <span>Settings</span>
-                    </a>
-                </li>
+                
             </ul>
             <hr style="border: 1px; border-style: dotted;">
             <div class="sidebar-footer">  

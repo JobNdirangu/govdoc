@@ -1,0 +1,29 @@
+{% extends 'user_management/base_user.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Card for Number of Groups -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-header">Total Groups</div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ group_count }}</h5>
+                    <p class="card-text">Number of groups in the system.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card for Number of Users -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-header">Total Users</div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ user_count }}</h5>
+                    <p class="card-text">Number of users registered in the system.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

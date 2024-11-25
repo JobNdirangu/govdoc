@@ -1,3 +1,6 @@
+{% extends 'user_management/base_user.html' %}
+
+{% block content %}
 <div class="container mt-4">
     <h1>Users</h1>
     <a href="{% url 'user_add' %}" class="btn btn-success mb-3">Add User</a>
@@ -34,3 +37,4 @@
         </ul>
     </nav>
 </div>
+{% endblock %}
