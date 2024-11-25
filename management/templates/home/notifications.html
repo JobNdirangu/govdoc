@@ -1,0 +1,76 @@
+{% extends 'home/base.html' %}
+
+{% block content %}
+<style>
+    .anchor {
+        background-color: #0e2238;
+        color: aliceblue;
+    }
+
+    .anchor:hover {
+        background-color: #204267;
+        color: aliceblue;
+    }
+    .btn-custom {
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #0a1a2e;
+        color: #fff;
+        font-size: 12px;
+        cursor: pointer;
+        display: inline-block !important;
+    }
+    .btn:hover {
+        background-color: #204267;
+    }
+</style>
+    <h4><i class="lni lni-alarm"></i> {{ notifications|length }} Notifications</h4>
+    <div class="">
+        <ul class="list-group">
+            {% for notification in notifications %}
+                <li class="list-group-item {% if not notification.is_read %}list-group-item-warning{% endif %} mb-3" style="border-radius: 15px; border-color: #0a1a2e; border-style: double;">
+                    <span  class="text-primary" >{{ notification.message }}</span><br>
+                    <small class="text-muted float-start">{{ notification.created_at }}</small>
+                    <button class="btn-custom float-end" onclick="markAsRead({{ notification.id }})">Mark as read</button>
+                </li>
+            {% empty %}
+                <li class="list-group-item">No notifications available.</li>
+            {% endfor %}
+        </ul>
+        <button class="btn-custom bg-danger mt-2 float-end" onclick="if(confirm('Are you sure you want to clear all notifications?')) { location.href='{% url 'clear_notifications' %}'; }">Clear All Notifications</button>
+    </div>
+
+    <script>
+        function markAsRead(notificationId) {
+            fetch(`/WineAndSpirit/notifications/mark/${notificationId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    // Refresh the page or remove the notification from the DOM
+                    location.reload();
+                }
+            });
+        }
+        
+        function clearAllNotifications() {
+            fetch('/WineAndSpirit/notifications/clear/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    // Refresh the page or clear notifications from the DOM
+                    location.reload();
+                }
+            });
+        }
+        </script>
+        
+{% endblock %}

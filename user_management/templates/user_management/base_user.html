@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GovDoc.</title>
+    <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+   
+        <!-- Load Django Static -->
+        {% load static %}
+        <link rel="stylesheet" href="{% static 'css/stylered.css' %}">
+        {% if theme_choice == 'dark' %}
+            <link rel="stylesheet" href="{% static 'css/dark.css' %}">
+        {% elif theme_choice == 'light' %}
+            <link rel="stylesheet" href="{% static 'css/light.css' %}">
+        {% elif theme_choice == 'green' %}
+            <link rel="stylesheet" href="{% static 'css/green.css' %}">
+        {% else %}
+            <link rel="stylesheet" href="{% static 'css/style.css' %}">
+        {% endif %}
+
+        <link rel="icon" type="image/png" href="{% static 'img/arms.jpg' %}">
+
+
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <aside id="sidebar">
+            <div class="d-flex">
+                <button class="toggle-btn" type="button">
+                    <i class="lni lni-grid-alt"></i>
+                </button>    
+                <div class="sidebar-logo text-center">
+                    <img src="{% static 'img/arms.jpg' %}" alt="Logo" class="img-fluid" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
+                </div>                          
+                            
+            </div>
+            <ul class="sidebar-nav">
+                <li class="sidebar-item">
+                    <a href="{% url 'dashboard' %}" class="sidebar-link">
+                        <i class="lni lni-dashboard"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="{% url 'document_list' %}" class="sidebar-link">
+                        <i class="lni lni-files"></i>
+                        <span>Documents</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#ManageProduct" class="sidebar-link collapsed has-dropdown" data-bs-toggle="collapse"
+                        data-bs-target="#manageProduct" aria-expanded="false" aria-controls="manageProduct">
+                        <i class="lni lni-package"></i>
+                        <span>Manage Products</span>
+                    </a>
+                    <ul id="manageProduct" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
+                        <li class="sidebar-item ms-3">
+                            <a href="{% url 'dashboard' %}" class="sidebar-link"><i class="lni lni-display"></i>Products</a>
+                        </li>
+                        <li class="sidebar-item ms-3">
+                            <a href="{% url 'dashboard' %}" class="sidebar-link"><i class="lni lni-book"></i>Price Book</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="sidebar-item">
+                    <a href="{% url 'user_list' %}" class="sidebar-link">
+                        <i class="lni lni-users"></i>
+                        <span>Users</span>
+                    </a>
+                </li>
+                                                             
+                <li class="sidebar-item">
+                    <a href="{% url 'company_settings' %}" class="sidebar-link">
+                        <i class="lni lni-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+            <hr style="border: 1px; border-style: dotted;">
+            <div class="sidebar-footer">  
+                <a href="{% url 'home' %}" class="sidebar-link">
+                    <i class="lni lni-home"></i>
+                    <span>Home</span>
+                </a>             
+                <form id="logout-form" action="{% url 'logout' %}" method="POST" style="display: none;">
+                    {% csrf_token %}
+                    <button type="submit">Logout</button>
+                </form>
+                
+                <!-- Create a logout link -->
+                <a href="#" onclick="document.getElementById('logout-form').submit(); return false;" class="sidebar-link">
+                    <i class="lni lni-exit"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Page Content -->
+        <div class="main" style="background-color: #f8f9fa;">
+            <div class="p-2 bg-light"  >
+                <div class="text-center row">                
+                    <h1 class="text-light d-flex justify-content-between align-items-center w-100">
+                        <span class="text-deepprimary" style="font-size: 0.9rem;"> {{ company_name }}</span>
+                       
+                        <div class="user-session d-flex align-items-center">
+                            {% if user.is_authenticated %}
+                                <a href="{% url 'notifications' %}" class="text-light  position-relative">
+                                    <i class="lni lni-alarm me-1 text-deepprimary"></i>
+                                    <span id="notification-count" class="position-absolute top-50 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem; padding: 0.2em 0.4em;">
+                                        {% if unread_notification_count > 0 %}
+                                            {{ unread_notification_count }}
+                                        {% endif %}
+                                    </span>
+                                </a>                                
+                                <span class="ms-4 text-deepprimary" style="font-size: 0.9rem;">Welcome, {{ user.username }}!</span>
+                            {% else %}
+                                <span class="fs-6 ms-3 text-deepprimary">Welcome, Guest!</span>
+                                <a href="{% url 'login' %}" class="btn btn-light text-dark">Login</a>
+                            {% endif %}
+                        </div>
+                    </h1>
+                </div>
+                
+            </div>
+            <hr>
+            <div class="ps-3 pe-3">
+                
+                {% block content %}
+                <!-- Content from individual pages will be injected here -->
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
+        crossorigin="anonymous"></script>
+    <script src="{% static 'js/script.js' %}"></script>  <!-- Use the static tag -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+
+    {% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Page is fully loaded, and scripts block is active.");
+            // Your additional JavaScript code
+            
+        });
+
+            
+        function updateNotificationCount() {
+                fetch("{% url 'notification_count' %}")
+                    .then(response => response.json())
+                    .then(data => {
+                        const countElement = document.querySelector('#notification-count');
+                        if (data.unread_count > 0) {
+                            countElement.textContent = `${data.unread_count}`;
+                        } else {
+                            countElement.textContent = '';
+                        }
+                    })
+                    .catch(error => console.error('Error fetching notification count:', error));
+            }
+
+            // Update the count every 30 seconds
+            setInterval(updateNotificationCount, 30000);
+
+            // Initial call to set the count when the page loads
+            updateNotificationCount();
+
+    </script>
+    {% endblock %}
+
+</body>
+
+</html> 

@@ -1,0 +1,297 @@
+{% extends 'home/base.html' %}
+
+{% block content %}
+<style>
+    .anchor {
+        background-color: #0e2238;
+        color: aliceblue;
+    }
+    .anchor:hover {
+        background-color: #204267;
+        color: aliceblue;
+    }
+    .btn-custom {
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #0a1a2e;
+        color: #fff;
+        font-size: 12px;
+        cursor: pointer;
+        display: inline-block !important;
+    }
+    .btn:hover {
+        background-color: #204267;
+    }
+</style>
+{% if messages %}
+        <div aria-live="polite" aria-atomic="true" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
+            {% for message in messages %}
+                <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-autohide="true" data-delay="5000" style="margin-top: 10px;">
+                    <div class="toast-header {% if message.tags == 'error' %}bg-danger{% elif message.tags == 'success' %}bg-success{% else %}bg-info{% endif %} text-light">
+                        <i class="fas fa-comment me-2"></i> 
+                        <strong class="me-auto">Notification</strong>
+                        <small>Just now</small>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        {{ message }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+{% endif %}
+<h1>Documents {{ page_obj.paginator.count }}</h1>
+
+<!-- Button to trigger the modal -->
+<button type="button" class="btn-custom btn-primary lni lni-plus" data-bs-toggle="modal" data-bs-target="#addDocumentModal">
+    Upload  Document
+</button>
+
+<!-- Document List Table -->
+<div class="table-responsive">
+    <table class="table table-hover  mt-3">
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Name</th>
+                <th>Desc</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for document in page_obj %}
+            <tr>
+                <td>{{ document.serial_number }}</td>
+                <td>{{ document.name }}</td>
+                <td>{{ document.description }}</td>
+                <td>{{ document.status }}</td>
+                <td>{{ document.priority }}</td>
+                <td>{{ document.upload_date|date:"Y-m-d" }}</td>
+    
+                <td>
+                    <div class="dropdown">
+                        <button class="btn-custom dropdown-toggle" type="button" id="dropdownMenuButton{{ document.pk }}" 
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v"></i> <!-- Three-dot icon -->
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ document.pk }}">
+                            <!-- <li>
+                                <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#viewDocumentModal" onclick="viewDocument('{{ document.file.url }}')">
+                                    <i class="fas fa-file-open"></i> Open
+                                </a>
+                            </li> -->
+                            <li>
+                                <a class="dropdown-item" href="{% url 'document_view' %}">
+                                    <i class="fas fa-file"></i> Open
+                                </a>
+                            </li>
+                            
+                            
+                            <li>
+                                <a class="dropdown-item" href="{% url 'document_detail' document.pk %}">
+                                    <i class="fas fa-eye"></i> View Details
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'document_detail' document.pk %}" >
+                                    <i class="fas fa-file-alt"></i> Ai Summarize
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'document_download' document.pk %}">
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                            </li>
+                            
+                            <li>
+                                <a class="dropdown-item text-danger" href="">
+                                    <i class="fas fa-trash"></i> Delete
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </td>
+                
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+<!-- Pagination  -->
+<div class="d-flex justify-content-center">
+    <nav aria-label="Customer pagination">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link anchor" href="?page=1" aria-label="First Page">
+                    <span aria-hidden="true">First</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link anchor" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                    <span aria-hidden="true">&lsaquo;</span>
+                </a>
+            </li>
+            {% endif %}
+
+            <li class="page-item disabled">
+                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            </li>
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link anchor" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                    <span aria-hidden="true">&rsaquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link anchor" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last Page">
+                    <span aria-hidden="true">Last</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+
+<!-- Add Document Modal -->
+<div class="modal fade" id="addDocumentModal" tabindex="-1" aria-labelledby="addDocumentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addDocumentModalLabel">Upload New Document</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'upload_document' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="documentName" class="form-label">Document Name</label>
+                        <input type="text" name="name" id="documentName" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <input type="text" name="description" id="documentName" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="documentFile" class="form-label">Choose File</label>
+                        <input type="file" name="file" id="documentFile" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="documentPriority" class="form-label">Priority</label>
+                        <select name="priority" id="documentPriority" class="form-select">
+                            <option value="High">High</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Low">Low</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn-custom bg-primary">Upload</button>
+                    <button type="button" class="btn-custom bg-danger" data-bs-dismiss="modal">Close</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add a modal for viewing the document -->
+<div class="modal fade" id="viewDocumentModal" tabindex="-1" aria-labelledby="viewDocumentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewDocumentModalLabel">View Document</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <iframe id="documentIframe" width="100%" height="600px" frameborder="0"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal to display the summary -->
+<!-- <div class="modal fade" id="summaryModal" tabindex="-1" aria-labelledby="summaryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="summaryModalLabel">Document Summary</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="summaryText">Loading summary...</p>
+            </div>
+        </div>
+    </div>
+</div> -->
+<!-- Summary Modal -->
+<div class="modal fade" id="summaryModal" tabindex="-1" aria-labelledby="summaryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="summaryModalLabel">Document Summary</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Loading Spinner -->
+                <div id="loadingSpinner" class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+
+                <!-- Summary Content -->
+                <div id="summaryContent" class="d-none">
+                    <p id="summaryText"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-custom bg-danger" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var toastElements = document.querySelectorAll('.toast');
+        toastElements.forEach(function(toastEl) {
+            var toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        });
+    });
+
+    function viewDocument(url) {
+        var iframe = document.getElementById('documentIframe');
+        iframe.src = url;
+    }
+
+
+    function summarizeDocument(documentId) {
+        fetch(`/management/summarize/${documentId}/`)
+            .then(response => response.json())
+            .then(data => {
+                // Display the summarized text in a modal
+                document.getElementById('summaryText').textContent = data.summary;
+                // Show the modal
+                $('#summaryModal').modal('show');
+            })
+            .catch(error => {
+                console.error("Error summarizing document:", error);
+            });
+    }
+</script>
+
+{% endblock %}

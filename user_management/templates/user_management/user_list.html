@@ -1,0 +1,36 @@
+<div class="container mt-4">
+    <h1>Users</h1>
+    <a href="{% url 'user_add' %}" class="btn btn-success mb-3">Add User</a>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in page_obj %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                    <a href="{% url 'user_edit' user.id %}" class="btn btn-primary btn-sm">Edit</a>
+                    <a href="{% url 'user_delete' user.id %}" class="btn btn-danger btn-sm">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <nav>
+        <ul class="pagination">
+            {% for page in page_obj.paginator.page_range %}
+            <li class="page-item {% if page_obj.number == page %}active{% endif %}">
+                <a class="page-link" href="?page={{ page }}">{{ page }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </nav>
+</div>

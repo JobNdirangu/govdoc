@@ -1,0 +1,8 @@
+<div class="container mt-4">
+    <h1>{{ form.instance.pk|yesno:"Edit User,Add User" }}</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">Save</button>
+    </form>
+</div>

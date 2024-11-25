@@ -1,0 +1,175 @@
+{% extends 'home/base.html' %}
+
+{% block content %}
+<style>
+    .anchor {
+        background-color: #0e2238;
+        color: aliceblue;
+    }
+    .anchor:hover {
+        background-color: #204267;
+        color: aliceblue;
+    }
+    .btn-custom {
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #0a1a2e;
+        color: #fff;
+        font-size: 12px;
+        cursor: pointer;
+        display: inline-block !important;
+    }
+    .btn:hover {
+        background-color: #204267;
+    }
+</style>
+<div class="container mt-4">
+    {% if messages %}
+        <div aria-live="polite" aria-atomic="true" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
+            {% for message in messages %}
+                <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-autohide="true" data-delay="5000" style="margin-top: 10px;">
+                    <div class="toast-header {% if message.tags == 'error' %}bg-danger{% elif message.tags == 'success' %}bg-success{% else %}bg-info{% endif %} text-light">
+                        <i class="fas fa-comment me-2"></i> 
+                        <strong class="me-auto">Notification</strong>
+                        <small>Just now</small>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        {{ message }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <!-- Breadcrumbs for easy navigation -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'document_list' %}">Documents</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ document.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title">
+                <i class="bi bi-file-earmark-text"></i> {{ document.name }}
+            </h4>
+            <p class="text-muted">{{ document.description }}</p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Document ID:</strong> {{ document.id }}</p>
+                    <p><strong>Status:</strong> 
+                        <span class="rounded-pill {% if document.status == 'Pending' %}badge badge-sm bg-warning text-light{% else %}badge badge-sm bg-danger text-light{% endif %}" style="font-size: 0.75rem; padding: 0.25rem 0.3rem;">
+                            {{ document.get_status_display }}
+                        </span>
+                    </p>
+                    <p><strong>Priority:</strong> {{ document.get_priority_display }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Date:</strong> {{ document.upload_date|date:"d-m-Y" }}</p>
+                    <p><strong>Signed by:</strong> {{ document.uploaded_by }}</p>
+                    <p><strong>Action:</strong> {{ document.action }}</p>
+
+                </div>
+            </div>
+
+            <hr>
+
+            <h5>Related Files</h5>
+            <ul class="list-group mb-3">
+                {% for related in related_documents %}
+                    <li class="list-group-item">
+                        <i class="bi bi-link"></i> 
+                        <a href="{{ related.related_file.url }}">{{ related.related_file.name }}</a>
+                        - {{ related.remarks }},  added by: {{ related.added_by }} on {{ related.added_date }}
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">No related documents available.</li>
+                {% endfor %}
+            </ul>
+
+            <a href="{% url 'add_related_document' document.pk %}" class="btn-custom btn-sm">
+                <i class="bi bi-file-plus"></i> Upload Related Document
+            </a>
+
+            <hr>
+
+            <h5>Approval Workflow</h5>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Department</th>
+                        <th>Status</th>
+                        <th>Remarks</th>
+                        <th>Assigned To</th>
+                        <th>Last Updated</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for workflow in workflows %}
+                    <tr>
+                        <td>{{ workflow.department }}</td>
+                        <td>
+                            <span class="rounded-pill {% if workflow.status == 'Pending' %}badge badge-sm bg-warning text-light{% else %}badge badge-sm bg-danger text-light{% endif %}" style="font-size: 0.75rem; padding: 0.25rem 0.3rem;">
+                                {{ workflow.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ workflow.remarks }}</td>
+                        <td>{{ workflow.assigned_to }}</td>
+                        <td>{{ workflow.last_updated|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-muted">No workflow updates yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <a href="{% url 'update_workflow' document.pk %}" class="btn-custom btn-success btn-sm">
+                <i class="bi bi-gear-fill"></i> Update Workflow
+            </a>
+
+            <hr>
+
+            <h5>Audit Log</h5>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Comment</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in document.action_logs.all %}
+                    <tr>
+                        <td>{{ log.timestamp|date:"Y-m-d H:i" }}</td>
+                        <td>{{ log.action_by }}</td>
+                        <td>{{ log.action }}</td>
+                        <td>{{ log.comments }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-muted">No actions logged yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var toastElements = document.querySelectorAll('.toast');
+        toastElements.forEach(function(toastEl) {
+            var toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        });
+    });
+</script>
+{% endblock %}

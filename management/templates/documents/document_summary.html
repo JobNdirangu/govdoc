@@ -1,0 +1,49 @@
+{% extends 'home/base.html' %}
+
+{% block content %}
+<style>
+    .anchor {
+        background-color: #0e2238;
+        color: aliceblue;
+    }
+    .anchor:hover {
+        background-color: #204267;
+        color: aliceblue;
+    }
+    .btn-custom {
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #0a1a2e;
+        color: #fff;
+        font-size: 12px;
+        cursor: pointer;
+        display: inline-block !important;
+    }
+    .btn:hover {
+        background-color: #204267;
+    }
+</style>
+
+
+<!-- Breadcrumbs for easy navigation -->
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'document_list' %}">Documents</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ summary.name }}</li>
+    </ol>
+</nav>
+
+<h5>Viewing Document Summary </h5>
+
+<div class="embed-responsive embed-responsive-16by9" style="height: 80vh;">
+    <div 
+        class="embed-responsive-item m-1" 
+        style="width: 100%; height: 100%; border: none;" 
+        >
+        {{ summary }}
+    </div>
+</div>
+
+<a href="{% url 'document_list' %}" class="btn-custom bg-primary mt-3">Back to Documents</a>
+{% endblock %}

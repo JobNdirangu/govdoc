@@ -1,0 +1,131 @@
+{% extends "home/base.html" %}
+
+{% block content %}
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+    .recent-files img, .file-detail-icon {
+        width: 50px;
+        height: 50px;
+    }
+    .card {
+        border-radius: 10px;
+    }
+    .file-permission {
+        border-radius: 5px;
+        padding: 2px 8px;
+        color: #fff;
+        font-size: 12px;
+    }
+    .file-permission.editor {
+        background-color: #4caf50;
+    }
+    .file-permission.viewer {
+        background-color: #007bff;
+    }
+    .file-permission.administrator {
+        background-color: #f44336;
+    }
+</style>
+
+<div class="container mt-4">
+   
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Left Column: Recent Files and Public Files -->
+            <div class="col-md-8">
+                <!-- Recent Files Section -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Recent Files</h5>
+                    </div>
+                    <div class="card-body d-flex flex-wrap">
+                        {% for file in recent_files %}
+                            <div class="p-2 text-center">
+                                <i class="fas fa-file-alt fa-3x text-primary"></i>
+                                <p class="small mt-2">{{ file.name }}</p>
+                            </div>
+                        {% empty %}
+                            <p>No recent files available.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+    
+                <!-- Public Files Section -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Public Files ({{ public_files|length }} Total)</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>File Name</th>
+                                    <th>Last Modified</th>
+                                    <th>Permission</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for file in public_files %}
+                                    <tr>
+                                        <td>{{ file.name }}</td>
+                                        <td>{{ file.last_modified|date:"Y-m-d" }}</td>
+                                        <td><span class="badge bg-info">{{ file.permission }}</span></td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-muted text-center">No public files available.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+    
+            <!-- Right Column: File Details -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>File Details</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if selected_file %}
+                            <h6>{{ selected_file.name }}</h6>
+                            <p><strong>Modified:</strong> {{ selected_file.modified|date:"Y-m-d" }}</p>
+                            <p><strong>Size:</strong> {{ selected_file.size }}</p>
+                            <p><strong>Views:</strong> {{ selected_file.views }}</p>
+                            <p><strong>Comments:</strong> {{ selected_file.comments }}</p>
+                            <p><strong>Shares:</strong> {{ selected_file.shares }}</p>
+                        {% else %}
+                            <p class="text-muted">Select a file to view details.</p>
+                        {% endif %}
+                    </div>
+                </div>
+    
+                <!-- File Insights Section -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5>File Insights</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Total Views:</strong> {{ insights.total_views }}</p>
+                        <p><strong>Comments:</strong> {{ insights.comments }}</p>
+                        <p><strong>Shares:</strong> {{ insights.shares }}</p>
+                        <div>
+                            <canvas id="fileInsightsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+  
+
+
+</div>
+    
+{% endblock %}
+

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        {%load static%}
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!--=============== FAVICON ===============-->
+        <link rel="shortcut icon" href="{% static 'assets/img/arms.jpg' %}" type="image/x-icon">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-pzjw8f+ua7Kw1TIqnhmgV+MA1iGr+De5Z9wXc3qUn74jI3Qc4Kf/Q76r4THT8LI8" crossorigin="anonymous">
+
+
+        <!--=============== REMIX ICONS ===============-->
+        <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+
+        <!--=============== CSS ===============-->
+        <link rel="stylesheet" href="{% static 'css/stylesgov.css' %}">
+
+        <title>GOVDOC</title>
+        <style>
+                        /*=============== HOME ===============*/
+.home__img {
+  width: 250px; /* Set image size */
+  height: auto; /* Maintain aspect ratio */
+  object-fit: cover; /* Ensure image covers the area without distortion */
+  position: relative;
+  top: -5rem; /* Adjust vertical position to float the image */
+  right: 1.5rem; /* Fine-tune horizontal position */
+  border-radius: 12px; /* Rounded corners for the image */
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1); /* Optional shadow for depth */
+  transition: transform 0.3s ease-in-out; /* Smooth transition on hover */
+}
+
+/* Add hover effect for interactivity */
+.home__img:hover {
+  transform: translateY(-10px); /* Image lifts slightly on hover */
+}
+
+/* Home container - Flexbox for horizontal layout */
+.home__container {
+  display: flex; /* Flexbox for positioning content and image side-by-side */
+  align-items: center; /* Vertically center both items */
+  justify-content: space-between; /* Distribute space between content and image */
+  gap: 30px; /* Space between content and image */
+}
+
+/* Home data section (text content) */
+.home__data {
+  flex: 1; /* Make content take up the remaining space */
+  padding-top: 5rem; /* Add spacing on top of the content */
+}
+
+/* Home header - subtitle and title positioning */
+.home__header {
+  position: relative;
+}
+
+.home__subtitle {
+  font-size: var(--big-font-size);
+  margin-bottom: var(--mb-2-5);
+  font-weight: 700; /* Ensure the subtitle has some weight */
+}
+
+/* Title effect - Positioned over the background */
+.home__title {
+  position: absolute;
+  top: -4rem;
+  left: 1rem;
+  line-height: 6rem;
+  font-size: var(--biggest-font-size);
+  background: var(--text-gradient);
+  color: transparent;
+  -webkit-background-clip: text; /* Gradient effect on the text */
+  background-clip: text;
+}
+
+/* Title description styles */
+.home__title-description {
+  font-size: var(--h3-font-size);
+  font-weight: var(--font-medium);
+  margin-bottom: var(--mb-1);
+}
+
+/* Description text styles */
+.home__description {
+  margin-bottom: var(--mb-2-5);
+  line-height: var(--text-line-height);
+}
+
+/* Button price - Price label styling */
+.home__price {
+  font-size: var(--h3-font-size);
+  font-weight: var(--font-semi-bold);
+  margin-left: var(--mb-0-75);
+}
+
+/* Optional: Add media queries for responsiveness */
+@media (max-width: 768px) {
+  .home__container {
+    flex-direction: column; /* Stack content and image vertically on small screens */
+    align-items: center; /* Center both elements */
+    gap: 20px; /* Reduce gap between content and image */
+  }
+
+  .home__img {
+    top: 0; /* Reset the vertical position */
+    right: 0; /* Reset the horizontal position */
+    margin-top: 20px; /* Add some space between image and content */
+  }
+
+  .home__data {
+    padding-top: 2rem; /* Reduce padding for mobile */
+  }
+}
+        </style>
+        
+    </head>
+    <body>
+        <!--=============== HEADER ===============-->
+        <header class="header" id="header">
+            <nav class="nav container">
+                <a href="#" class="nav__logo">
+                    <img src="{% static 'img/arms.jpg' %}" alt="">
+                    
+                </a>
+                <span>GovDoc System</span>
+
+                <div class="nav__menu" id="nav-menu">
+                    <ul class="nav__list">
+                        <li class="nav__item">
+                            <a href="{% url 'dashboard' %}" class="nav__link active-link text-primary">Home</a>
+                        </li>
+                        <li class="nav__item">
+                            <a href="{% url 'dashboard' %}" class="nav__link">Sign in</a>
+                        </li>
+                        
+                        <li class="nav__item">
+                            <a href="{% url 'dashboard' %}" class="nav__link">Terms & Conditions</a>
+                        </li>
+                    </ul>
+
+                    <div class="nav__close" id="nav-close">
+                        <i class="ri-close-line"></i>
+                    </div>
+                </div>
+
+                <div class="nav__toggle" id="nav-toggle">
+                    <i class="ri-function-line"></i>
+                </div>
+            </nav>
+        </header>
+
+        <main class="main">
+            <!--=============== HOME ===============-->
+            <section class="home section" id="home">
+                <div class="home__container container grid">
+                    <!-- Updated Content with GovDoc Theme -->
+        
+                    <div class="home__data">
+                        <div class="home__header">
+                            <h2 class="home__subtitle">GovDoc System</h2>
+                        </div>
+        
+                        <div class="home__footer">
+                            <h3 class="home__title-description">System Overview</h3>
+                            <p class="home__description">
+                                Welcome to the AI-driven Government Document Management System. Efficiently store, retrieve, and manage documents with enhanced security and compliance. 
+                                Leverage cutting-edge AI to automatically categorize and tag your files, ensuring streamlined workflows and accurate document handling.
+                            </p>
+                            <a href="#" class="button button--flex">
+                                <span class="button--flex">
+                                    <i class="ri-settings-2-line button__icon"></i> Filling System
+                                </span>
+                                <span class="home__price">AI Assistance Available</span>
+                            </a>
+                        </div>
+                    </div>
+        
+                    <!-- Image Next to the Content -->
+                    <img src="{% static 'img/bgsystem.jpg' %}" alt="GovDoc Image" class="home__img">
+                </div>
+            </section>
+        </main>
+            
+            <!--=============== SPONSOR ===============-->
+            <section class="sponsor section">
+                <div class="sponsor__container container grid">
+                    <img src="{% static 'img/docs.jpg' %}" alt="" class="sponsor__img">
+                    <img src="{% static 'img/bg22.jpg' %}" alt="" class="sponsor__img">
+                    <img src="{% static 'img/sponsor3.jpg' %}" alt="" class="sponsor__img">
+                    <img src="{% static 'img/case.jpg' %}" alt="" class="sponsor__img">
+                </div>
+            </section>
+
+            <!--=============== SPECS ===============-->
+            <section class="specs section grid" id="specs">
+                <h2 class="section__title section__title-gradient">FEATURES</h2>
+            
+                <div class="specs__container container grid">
+                    <div class="specs__content grid">
+                        <!-- Secure Connection -->
+                        <div class="specs__data">
+                            <i class="ri-lock-line specs__icon"></i>
+                            <h3 class="specs__title">Secure Access</h3>
+                            <span class="specs__subtitle">End-to-end encryption for document security</span>
+                        </div>
+            
+                        <!-- Cloud Storage -->
+                        <div class="specs__data">
+                            <i class="ri-cloud-line specs__icon"></i>
+                            <h3 class="specs__title">Cloud Storage</h3>
+                            <span class="specs__subtitle">Seamless cloud integration for easy access</span>
+                        </div>
+            
+                        <!-- File Management -->
+                        <div class="specs__data">
+                            <i class="ri-folder-line specs__icon"></i>
+                            <h3 class="specs__title">Document Management</h3>
+                            <span class="specs__subtitle">Automatic categorization and tagging of documents</span>
+                        </div>
+            
+                        <!-- User Authentication -->
+                        <div class="specs__data">
+                            <i class="ri-user-line specs__icon"></i>
+                            <h3 class="specs__title">User Authentication</h3>
+                            <span class="specs__subtitle">Multi-factor authentication for secure logins</span>
+                        </div>
+                    </div>
+            
+                    <div>
+                        <img src="{% static 'img/bg22.jpg' %}" alt="" class="specs__img">
+                    </div>
+                </div>
+            </section>
+            
+
+            <!--=============== CASE ===============-->
+            <section class="case section grid" id="case">
+                <h2 class="section__title section__title-gradient">Case</h2>
+
+                <div class="case__container container grid">
+                    <div>
+                        <img src="{% static 'img/case.jpg' %}" alt="" class="case__img">
+                    </div>
+
+                    <div class="case__data">
+                        <p class="case__description">With a comfortable and adaptable case so that you can store files whenever you want, and keep your durability forever.
+                        </p>
+                        <a href="#" class="button button--flex">
+                            <i class="ri-archive-line button__icon"></i> Secure Archive
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!--=============== DISCOUNT ===============-->
+            <section class="discount section">
+                <div class="discount__container container grid">
+                    <div class="discount__animate">
+                        <h2 class="discount__title">Immerse yourself in <br>  effortless document retrieval with Ai</h2>
+                        <p class="discount__description">Unlock Seamless Document Management with AI-driven capabilities. The GovDoc System automatically categorizes and summarizes documents, while voice recognition allows hands-free access to your files, ensuring an efficient and secure workflow.</p>
+                        <a href="#" class="button button--flex">
+                            <i class="ri-file-2-line button__icon"></i> GOVDOC
+                        </a>
+                    </div>
+
+                    <img src="{% static 'img/Your paragraph text.png' %}" alt="" class="discount__img">
+                </div>
+            </section>
+
+            <!--=============== PRODUCTS ===============-->
+
+        <!--=============== FOOTER ===============-->
+        <footer class="footer section">
+            <div class="footer__container container grid">
+                <a href="#" class="footer__logo">
+                    <img src="{% static 'img/logo dark.png' %}" alt="">
+                </a>
+    
+                <div class="footer__content">
+                    <h3 class="footer__title">Quick Links</h3>
+    
+                    <ul class="footer__links">
+                        <li>
+                            <a href="/" class="footer__link">Home</a>
+                        </li>
+                        <li>
+                            <a href="{% url 'login' %}" class="footer__link">Sign IN</a>
+                        </li>
+                        <li>
+                            <a href="#" class="footer__link">Terms & Conditions</a>
+                        </li>
+                    </ul>
+                </div>
+    
+                <div class="footer__content">
+                    <h3 class="footer__title">Support</h3>
+    
+                    <ul class="footer__links">
+                        <li>
+                            <a href="#" class="footer__link">Help</a>
+                        </li>
+                        <li>
+                            <a href="#" class="footer__link">Register</a>
+                        </li>
+                        <li>
+                            <a href="#" class="footer__link">Terms and Conditions</a>
+                        </li>
+                        <li>
+                            <a href="#" class="footer__link">Provides</a>
+                        </li>
+                    </ul>
+                </div>
+    
+                <div class="footer__content">
+                    <form action="" class="footer__form">
+                        <input type="email" placeholder="Email" class="footer__input">
+                        <button class="button button--flex">
+                            <i class="ri-send-plane-line button__icon"></i> LOGIN
+                        </button>
+                    </form>
+    
+                    <div class="footer__social">
+                        <a href="https://www.facebook.com/" target="_blank" class="footer__social-link">
+                            <i class="ri-facebook-fill"></i>
+                        </a>
+                        <a href="https://www.instagram.com/" target="_blank" class="footer__social-link">
+                            <i class="ri-instagram-line"></i>
+                        </a>
+                        <a href="https://twitter.com/" target="_blank" class="footer__social-link">
+                            <i class="ri-twitter-line"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <p class="footer__copy">
+                <a href="https://www.youtube.com/c/Bedimcode/" target="_blank" class="footer__copy-link">&#169; GOVDOC. All right reserved</a>
+            </p>
+        </footer>
+
+        <!--=============== SCROLL UP ===============-->
+        <a href="#" class="scrollup" id="scroll-up">
+            <i class="ri-arrow-up-s-line scrollup__icon"></i>
+        </a>
+        
+        <!--=============== SCROLL REVEAL ===============-->
+        <script src="https://unpkg.com/scrollreveal"></script>
+
+        <!--=============== MAIN JS ===============-->
+        <script src="{% static 'js/main.js' %}"></script>
+    </body>
+</html>
