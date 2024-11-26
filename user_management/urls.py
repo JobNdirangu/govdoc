@@ -17,12 +17,12 @@ urlpatterns = [
     path('groups/delete/<int:pk>/', views.group_delete, name='group_delete'),
 
      # Ministry 
-    path('ministries/', views.ministry_list_create, name='ministry_list'),
-    path('ministries/<int:pk>/edit/', views.ministry_edit, name='ministry_edit'),
-    path('ministries/<int:pk>/delete/', views.ministry_delete, name='ministry_delete'),
+    path('ministries/', views.ministry_list_create, name='ministry_list_create'),
+    path('ministries/edit/<int:pk>/', views.ministry_edit, name='ministry_edit'),
+    path('ministries/delete/<int:pk>/', views.ministry_delete, name='ministry_delete'),
 
     # Department 
-    path('departments/', views.department_list_create, name='department_list'),
-    path('departments/<int:pk>/edit/', views.department_edit, name='department_edit'),
-    path('departments/<int:pk>/delete/', views.department_delete, name='department_delete'),
+    path('departments/', views.department_list_create, name='department_list_create'),
+    path('departments/edit/<int:pk>/', views.department_edit, name='department_edit'),
+    path('departments/delete/<int:pk>/', views.department_delete, name='department_delete'),
 ]

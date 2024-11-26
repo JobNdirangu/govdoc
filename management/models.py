@@ -19,23 +19,41 @@ class Department(models.Model):
     def __str__(self):
         return self.name
     
+# class Document(models.Model):
+#     """Main document model."""
+#     PRIORITY_CHOICES = [
+#         ('High', 'High'),
+#         ('Medium', 'Medium'),
+#         ('Low', 'Low'),
+#     ]
+#     STATUS_CHOICES = [
+#         ('Pending', 'Pending'),
+#         ('Processing', 'Processing'),
+#         ('Completed', 'Completed'),
+#     ]
+#     ACTION_CHOICES = [
+#         ('Approved', 'Approved'),
+#         ('Rejected', 'Rejected'),
+#         ('Deleted', 'Deleted'),
+#         ('None', 'None'),
+#     ]
+
+#     name = models.CharField(max_length=255)
+#     description = models.TextField(blank=True, null=True)
+#     file = models.FileField(upload_to='documents/')
+#     uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uploaded_documents')
+#     upload_date = models.DateTimeField(auto_now_add=True)
+#     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='Medium')
+#     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='Pending')
+#     action = models.CharField(max_length=15, choices=ACTION_CHOICES, default='None')
+
+#     def __str__(self):
+#         return self.name
+
 class Document(models.Model):
-    """Main document model."""
-    PRIORITY_CHOICES = [
-        ('High', 'High'),
-        ('Medium', 'Medium'),
-        ('Low', 'Low'),
-    ]
-    STATUS_CHOICES = [
-        ('Pending', 'Pending'),
-        ('Processing', 'Processing'),
-        ('Completed', 'Completed'),
-    ]
-    ACTION_CHOICES = [
-        ('Approved', 'Approved'),
-        ('Rejected', 'Rejected'),
-        ('Deleted', 'Deleted'),
-        ('None', 'None'),
+    VISIBILITY_CHOICES = [
+        ('Private', 'Private'),
+        ('Public', 'Public'),
     ]
 
     name = models.CharField(max_length=255)
@@ -43,12 +61,38 @@ class Document(models.Model):
     file = models.FileField(upload_to='documents/')
     uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uploaded_documents')
     upload_date = models.DateTimeField(auto_now_add=True)
-    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='Medium')
-    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='Pending')
-    action = models.CharField(max_length=15, choices=ACTION_CHOICES, default='None')
+    visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='Private')
 
     def __str__(self):
         return self.name
+
+class DocumentAccess(models.Model):
+    """Handles document sharing."""
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name='access_list')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='shared_documents')
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, null=True, blank=True)
+    ministry = models.ForeignKey(Ministry, on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return f"Access for {self.document.name}"
+
+class ApprovalTask(models.Model):
+    """Tracks document approval workflows."""
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Approved', 'Approved'),
+        ('Rejected', 'Rejected'),
+    ]
+
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name='approval_tasks')
+    assigned_to = models.ForeignKey(User, on_delete=models.CASCADE, related_name='approval_tasks')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
+    remarks = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Approval for {self.document.name} by {self.assigned_to.username}"
 
 
 class RelatedDocument(models.Model):
@@ -63,11 +107,32 @@ class RelatedDocument(models.Model):
         return f"Related to {self.parent_document.name}"
 
 
+class Workflow(models.Model):
+    """Tracks approval workflows and status updates."""
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Under Review', 'Under Review'),
+        ('Approved', 'Approved'),
+        ('Rejected', 'Rejected'),
+        ('Completed', 'Completed'),
+    ]
+
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name='workflows')
+    department = models.CharField(max_length=255)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    assigned_to = models.ForeignKey(User, on_delete=models.CASCADE, related_name='assigned_workflows')
+    remarks = models.TextField(blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Workflow for {self.document.name} - {self.status}"
+
 class ActionLog(models.Model):
     """Tracks actions performed on documents."""
     document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name='action_logs')
     action_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    action = models.CharField(max_length=15, choices=Document.ACTION_CHOICES)
+    action = models.CharField(max_length=15)
     timestamp = models.DateTimeField(auto_now_add=True)
     comments = models.TextField(blank=True, null=True)
 
@@ -92,41 +157,6 @@ class ActionLog(models.Model):
 
     def __str__(self):
         return f"Action {self.action} on {self.document.name}"
-
-
-class Workflow(models.Model):
-    """Tracks approval workflows and status updates."""
-    STATUS_CHOICES = [
-        ('Pending', 'Pending'),
-        ('Under Review', 'Under Review'),
-        ('Approved', 'Approved'),
-        ('Rejected', 'Rejected'),
-        ('Completed', 'Completed'),
-    ]
-
-    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name='workflows')
-    department = models.CharField(max_length=255)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
-    assigned_to = models.ForeignKey(User, on_delete=models.CASCADE, related_name='assigned_workflows')
-    remarks = models.TextField(blank=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Workflow for {self.document.name} - {self.status}"
-
-
-class DocumentMovement(models.Model):
-    """Tracks the movement of documents between departments."""
-    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name='movements')
-    from_department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, related_name='outgoing_documents')
-    to_department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, related_name='incoming_documents')
-    moved_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    move_date = models.DateTimeField(auto_now_add=True)
-    remarks = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        return f"Movement of {self.document.name} from {self.from_department} to {self.to_department}"
 
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # User to whom the notification belongs

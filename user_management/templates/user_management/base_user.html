@@ -67,14 +67,14 @@
                 </li>
 
                 <li class="sidebar-item">
-                    <a href="{% url 'ministry_list' %}" class="sidebar-link">
+                    <a href="{% url 'ministry_list_create' %}" class="sidebar-link">
                         <i class="lni lni-briefcase"></i>
                         <span>Ministries</span>
                     </a>
                 </li>
 
                 <li class="sidebar-item">
-                    <a href="{% url 'department_list' %}" class="sidebar-link">
+                    <a href="{% url 'department_list_create' %}" class="sidebar-link">
                         <i class="lni lni-book"></i>
 
                         <span>Departments</span>
@@ -107,7 +107,7 @@
             <div class="p-2 bg-light"  >
                 <div class="text-center row">                
                     <h1 class="text-light d-flex justify-content-between align-items-center w-100">
-                        <span class="text-deepprimary" style="font-size: 0.9rem;"> {{ company_name }}</span>
+                        <span class="text-deepprimary" style="font-size: 0.9rem;">Admin for  {{ company_name }}</span>
                        
                         <div class="user-session d-flex align-items-center">
                             {% if user.is_authenticated %}

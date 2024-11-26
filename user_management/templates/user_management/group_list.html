@@ -26,7 +26,7 @@
 </style>
 <div class="container mt-4">
     <h1>Groups</h1>
-    <button class="btn-custom bg-deepprimary mb-3" data-bs-toggle="modal" data-bs-target="#addGroupModal">Add Group</button>
+    <button class="btn-custom bg-deepprimary mb-3" data-bs-toggle="modal" data-bs-target="#addGroupModal"><i class="lni lni-plus"></i> Add Group</button>
     <table class="table table-striped">
         <thead>
             <tr>
@@ -91,7 +91,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addGroupModalLabel">Add Group</h5>
+                <h5 class="modal-title" id="addGroupModalLabel"> Add Group</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="post" action="{% url 'group_add' %}">

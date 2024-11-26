@@ -45,7 +45,7 @@ class CompanySettingForm(forms.ModelForm):
 class DocumentForm(forms.ModelForm):
     class Meta:
         model = Document
-        fields = ['name', 'description', 'file', 'priority']
+        fields = ['name', 'description', 'file', 'visibility']
 
 
 class RelatedDocumentForm(forms.ModelForm):

@@ -1,7 +1,7 @@
 import os
 from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import CompanySetting,ActionLog,Department,Document, DocumentMovement,Notification,RelatedDocument,User,Workflow
+from .models import CompanySetting,ActionLog,Department,Document, DocumentAccess,Notification,RelatedDocument,User,Workflow
 from .forms import CompanySettingForm,Workflow,Document,WorkflowForm,DocumentForm,RelatedDocumentForm
 from django.contrib.auth.decorators import login_required,permission_required
 from django.core.exceptions import PermissionDenied
