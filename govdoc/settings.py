@@ -27,6 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+CORS_ALLOW_ALL_ORIGINS = True
 
 # Application definition
 
@@ -40,6 +41,8 @@ INSTALLED_APPS = [
     'management',
     'user_management',
 ]
+INSTALLED_APPS += ['corsheaders']
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -49,9 +52,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'management.middleware.timezone_middleware.TimezoneMiddleware',  
+    'management.middleware.timezone_middleware.TimezoneMiddleware', 
+    
+     
 
 ]
+MIDDLEWARE.insert(0, 'corsheaders.middleware.CorsMiddleware')
 
 ROOT_URLCONF = 'govdoc.urls'
 

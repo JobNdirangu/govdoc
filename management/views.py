@@ -31,11 +31,12 @@ from transformers import pipeline
 from django.http import FileResponse
 import fitz  # PyMuPDF
 from transformers import pipeline
-from urllib.parse import unquote
+from urllib.parse import quote
+import mimetypes
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
-
-os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'  # Disable oneDNN custom ops
-import tensorflow as tf
 
 register = template.Library()
 
@@ -68,6 +69,18 @@ def document_list(request):
 
     return render(request, 'documents/document_list.html', {'page_obj': page_obj})
 
+# Edit document info
+def document_edit(request, pk):
+    document = get_object_or_404(Document, pk=pk)
+    if request.method == 'POST':
+        form = DocumentForm(request.POST, request.FILES, instance=document)
+        if form.is_valid():
+            form.save()
+            return redirect('document_list')  # Redirect back to the document list view
+    else:
+        form = DocumentForm(instance=document)
+    return render(request, 'management/document_edit.html', {'form': form, 'document': document})
+
 # Download Document
 @login_required
 def document_download(request, pk):
@@ -83,7 +96,6 @@ def document_download(request, pk):
     except Exception as e:
         raise Http404(f"Error opening file: {str(e)}")
     
-import mimetypes
 # Open Document
 @login_required
 def document_open(request, pk):
@@ -101,17 +113,36 @@ def document_open(request, pk):
     return response
 
 
+# @login_required
+# def document_view(request, pk):
+#     document = get_object_or_404(Document, pk=pk)
+#     file_url = request.build_absolute_uri(document.file.url)
+#     file_url = quote(file_url, safe=':/')
+#     # file_url = unquote(document.file.url)    
+#     ActionLog.objects.create(
+#         document=document,
+#         action_by=request.user,
+#         action='Viewed in System',
+#         comments="Document has been opened"
+#     )
+#     return render(request, 'documents/document_view.html', {'document': document, 'file_url': file_url})
+
+
 @login_required
 def document_view(request, pk):
     document = get_object_or_404(Document, pk=pk)
-    file_url = unquote(document.file.url)    
-    ActionLog.objects.create(
-        document=document,
-        action_by=request.user,
-        action='Viewed in System',
-        comments="Document has been opened"
-    )
-    return render(request, 'documents/document_view.html', {'document': document, 'file_url': file_url})
+    file_path = document.file.path
+
+    if not os.path.exists(file_path):
+        raise Http404("File not found")
+
+    mime_type, _ = mimetypes.guess_type(file_path)
+    if mime_type is None:
+        mime_type = 'application/octet-stream'
+    else:
+        response = FileResponse(open(file_path, 'rb'), content_type=mime_type)
+        response['Content-Disposition'] = 'inline; filename="{}"'.format(document.file.name)
+        return response
 
 
 # @login_required
@@ -251,46 +282,74 @@ def clear_notifications(request):
     return redirect('notifications')  
 
 
-
-# Initialize the summarization pipeline
-summarizer = pipeline("summarization")
+# Initialize the summarization pipeline with a specific model
+summarizer = pipeline("summarization", model="facebook/bart-large-cnn", revision="main")
 
 def summarize_pdf(request, document_id):
-    document = get_object_or_404(Document, pk=document_id)
-    pdf_path = document.file.path  
-    text = extract_text_from_pdf(pdf_path)
-    summary = summarize_text(text)
-    print(summary)
-    ActionLog.objects.create(
-        document=document,
-        action_by=request.user,
-        action='Summarized',
-        comments="Summary generated"
-    )
+    try:
+        document = get_object_or_404(Document, pk=document_id)
+        pdf_path = document.file.path  
 
-    return render(request, 'documents/document_summary.html', {'summary': summary})
+        # Extract text from the PDF
+        text = extract_text_from_pdf(pdf_path)
+
+        if not text:
+            messages.error(request, "No text found in the PDF document.")
+            return render(request, 'documents/document_summary.html')
+
+        # If the document is too large, we return an error message
+        if len(text) > 10000:  # Adjust this size threshold as needed
+            messages.error(request, "Document is too large to summarize.")
+            return render(request, 'documents/document_summary.html')
+
+        # Generate summary
+        summary = summarize_text(text)
+
+        # Log the summarization action
+        ActionLog.objects.create(
+            document=document,
+            action_by=request.user,
+            action='Summarized',
+            comments="Summary generated"
+        )
+
+        return render(request, 'documents/document_summary.html', {'summary': summary})
+
+    except Exception as e:
+        # Handle unexpected errors
+        messages.error(request, f"An error occurred: {str(e)}")
+        return render(request, 'documents/document_summary.html')
 
 def extract_text_from_pdf(pdf_path):
-    # Extract text from each page of the PDF
-    doc = fitz.open(pdf_path)
-    text = ""
-    for page_num in range(doc.page_count):
-        page = doc.load_page(page_num)
-        text += page.get_text()
-    return text
+    try:
+        # Extract text from each page of the PDF
+        doc = fitz.open(pdf_path)
+        text = ""
+        for page_num in range(doc.page_count):
+            page = doc.load_page(page_num)
+            text += page.get_text()
+        return text
+    except Exception as e:
+        # Return an error if PDF extraction fails
+        print(f"Error extracting text from PDF: {e}")
+        return None
 
 def summarize_text(text):
-    max_input_length = 1024
-    chunk_size = max_input_length // 2  
-    text_chunks = [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
-    
-    summary = ""
-    for chunk in text_chunks:
-        chunk_summary = summarizer(chunk, max_length=100, min_length=50, do_sample=False)
-        summary += chunk_summary[0]['summary_text'] + " "
-    return summary
+    try:
+        max_input_length = 1024  # Adjust this based on model's token size
+        chunk_size = max_input_length // 2  # Split into chunks of ~512 tokens
+        text_chunks = [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
 
+        summary = ""
+        for chunk in text_chunks:
+            # Summarize each chunk
+            chunk_summary = summarizer(chunk, max_length=100, min_length=50, do_sample=False)
+            summary += chunk_summary[0]['summary_text'] + " "
+        return summary
 
+    except Exception as e:
+        print(f"Error during text summarization: {e}")
+        return "Error summarizing the text."
 
 
 

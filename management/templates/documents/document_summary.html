@@ -25,7 +25,23 @@
     }
 </style>
 
-
+{% if messages %}
+        <div aria-live="polite" aria-atomic="true" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
+            {% for message in messages %}
+                <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-autohide="true" data-delay="5000" style="margin-top: 10px;">
+                    <div class="toast-header {% if message.tags == 'error' %}bg-danger{% elif message.tags == 'success' %}bg-success{% else %}bg-info{% endif %} text-light">
+                        <i class="fas fa-comment me-2"></i> 
+                        <strong class="me-auto">Notification</strong>
+                        <small>Just now</small>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        {{ message }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+{% endif %}
 <!-- Breadcrumbs for easy navigation -->
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
@@ -46,4 +62,21 @@
 </div>
 
 <a href="{% url 'document_list' %}" class="btn-custom bg-primary mt-3">Back to Documents</a>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var toastElements = document.querySelectorAll('.toast');
+        toastElements.forEach(function(toastEl) {
+            var toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        });
+    });
+
+    function viewDocument(url) {
+        var iframe = document.getElementById('documentIframe');
+        iframe.src = url;
+    }
+
+</script>
+
 {% endblock %}

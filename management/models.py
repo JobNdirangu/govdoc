@@ -3,6 +3,22 @@ from django.contrib.auth.models import User
 from django.db.models.signals import pre_delete,post_save
 from django.dispatch import receiver
 
+
+class Ministry(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
+class Department(models.Model):
+    ministry = models.ForeignKey(Ministry, on_delete=models.CASCADE, null=True, blank=True, related_name="departments")
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+    
 class Document(models.Model):
     """Main document model."""
     PRIORITY_CHOICES = [
@@ -98,15 +114,6 @@ class Workflow(models.Model):
 
     def __str__(self):
         return f"Workflow for {self.document.name} - {self.status}"
-
-
-class Department(models.Model):
-    """Department model for tracking document movement."""
-    name = models.CharField(max_length=255, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.name
 
 
 class DocumentMovement(models.Model):

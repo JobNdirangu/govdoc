@@ -1,12 +1,6 @@
 {% extends 'home/base.html' %}
 
 {% block content %}
-{%load static%}
-<link rel="stylesheet" href="{% static 'pdfjs/pdf_viewer.css' %}">
-<script src="{% static 'pdfjs/pdf.js' %}"></script>
-<script src="{% static 'pdfjs/viewer.js' %}"></script>
-
-
 <style>
     .anchor {
         background-color: #0e2238;
@@ -40,14 +34,14 @@
     </ol>
 </nav>
 
-
 <div class="embed-responsive embed-responsive-16by9" style="height: 80vh;">
     <iframe 
-        src="{% static 'pdfjs/viewer.html' %}?file={{ file_url }}" 
+        class="embed-responsive-item" 
+        src="{{ document.file.url }}" 
         style="width: 100%; height: 100%; border: none;" 
-    ></iframe>
+        allowfullscreen>
+    </iframe>
 </div>
-
 
 <a href="{% url 'document_list' %}" class="btn-custom bg-primary mt-3">Back to Documents</a>
 {% endblock %}

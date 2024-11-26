@@ -4,3 +4,4 @@ pip install tensorflow
 pip install tf-keras
 
 
+pip install django-cors-headers for pdf view

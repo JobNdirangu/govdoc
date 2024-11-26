@@ -8,6 +8,7 @@ urlpatterns = [
     path('403/', views.custom_403_view, name='403'),
 
     path('documents', views.document_list, name='document_list'),
+    path('edit/<int:pk>/', views.document_edit, name='document_edit'),
     path('document/<int:pk>/', views.document_detail, name='document_detail'),
     path('document/upload/', views.upload_document, name='upload_document'),
     path('document/<int:pk>/add-related/', views.add_related_document, name='add_related_document'),
@@ -26,7 +27,7 @@ urlpatterns = [
 
     # Summarize
     # path('documents/<int:pk>/summarize/', views.summarize_document, name='document_summarize'),
-    # path('summarize/<int:document_id>/', views.summarize_pdf, name='summarize_pdf'),
+    path('summarize/<int:document_id>/', views.summarize_pdf, name='summarize_pdf'),
 
     # Company Settings
     path('settings/', views.company_settings_view, name='company_settings'),

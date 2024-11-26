@@ -1,0 +1,134 @@
+{% extends 'user_management/base_user.html' %}
+
+{% block content %}
+<style>
+    .anchor {
+        background-color: #0e2238;
+        color: aliceblue;
+    }
+    .anchor:hover {
+        background-color: #204267;
+        color: aliceblue;
+    }
+    .btn-custom {
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #0a1a2e;
+        color: #fff;
+        font-size: 12px;
+        cursor: pointer;
+        display: inline-block !important;
+    }
+    .btn:hover {
+        background-color: #204267;
+    }
+</style>
+
+<div class="container mt-4">
+    <h2>Departments Management</h2>
+    
+    <!-- Button to Open Add Department Modal -->
+    <button class="btn-custom" data-bs-toggle="modal" data-bs-target="#addDepartmentModal">Add Department</button>
+
+    <!-- Departments List Table -->
+    <table class="table table-striped mt-4">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Department Name</th>
+                <th>Ministry</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for department in departments %}
+            <tr>
+                <td>{{ department.id }}</td>
+                <td>{{ department.name }}</td>
+                <td>{{ department.ministry.name }}</td>
+                <td>
+                    <!-- Edit Button -->
+                    <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#editDepartmentModal"
+                            data-id="{{ department.id }}" data-name="{{ department.name }}"
+                            data-ministry="{{ department.ministry.id }}">Edit</button>
+                    <!-- Delete Button -->
+                    <form method="POST" action="{% url 'delete_department' department.id %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Add Department Modal -->
+    <div class="modal fade" id="addDepartmentModal" tabindex="-1" aria-labelledby="addDepartmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addDepartmentModalLabel">Add Department</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" action="{% url 'department_list' department.id %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="department_name" class="form-label">Department Name</label>
+                            <input type="text" class="form-control" id="department_name" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ministry" class="form-label">Ministry</label>
+                            <select class="form-select" id="ministry" name="ministry" required>
+                                {% for ministry in ministries %}
+                                    <option value="{{ ministry.id }}">{{ ministry.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Save Department</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Department Modal -->
+    <div class="modal fade" id="editDepartmentModal" tabindex="-1" aria-labelledby="editDepartmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editDepartmentModalLabel">Edit Department</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" action="{% url 'department_edit' department.id  %}">
+                        {% csrf_token %}
+                        <input type="hidden" id="department_id" name="department_id">
+                        <div class="mb-3">
+                            <label for="department_name_edit" class="form-label">Department Name</label>
+                            <input type="text" class="form-control" id="department_name_edit" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ministry_edit" class="form-label">Ministry</label>
+                            <select class="form-select" id="ministry_edit" name="ministry" required>
+                                {% for ministry in ministries %}
+                                    <option value="{{ ministry.id }}">{{ ministry.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Update Department</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

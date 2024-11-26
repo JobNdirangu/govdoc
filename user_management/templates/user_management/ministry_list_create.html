@@ -1,0 +1,150 @@
+{% extends 'user_management/base_user.html' %}
+
+{% block content %}
+<style>
+    .anchor {
+        background-color: #0e2238;
+        color: aliceblue;
+    }
+    .anchor:hover {
+        background-color: #204267;
+        color: aliceblue;
+    }
+    .btn-custom {
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #0a1a2e;
+        color: #fff;
+        font-size: 12px;
+        cursor: pointer;
+        display: inline-block !important;
+    }
+    .btn:hover {
+        background-color: #204267;
+    }
+</style>
+
+<div class="container mt-4">
+    <h2>Ministries</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ministry in page_obj %}
+            <tr>
+                <td>{{ ministry.name }}</td>
+                <td>{{ ministry.description }}</td>
+                <td>
+                    <button class="btn-primary btn-custom" data-bs-toggle="modal" data-bs-target="#editMinistryModal{{ ministry.id }}">Edit</button>
+                    <a href="{% url 'ministry_delete' ministry.id %}" class="btn-custom bg-danger">Delete</a>
+                </td>
+            </tr>
+
+            <!-- Edit Ministry Modal -->
+            <div class="modal fade" id="editMinistryModal{{ ministry.id }}" tabindex="-1" aria-labelledby="editMinistryModalLabel{{ ministry.id }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editMinistryModalLabel{{ ministry.id }}">Edit Ministry</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form method="post" action="{% url 'ministry_edit' ministry.id %}">
+                            {% csrf_token %}
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="name{{ ministry.id }}" class="form-label">Name</label>
+                                    <input type="text" name="name" id="name{{ ministry.id }}" class="form-control" value="{{ ministry.name }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="description{{ ministry.id }}" class="form-label">Description</label>
+                                    <textarea name="description" id="description{{ ministry.id }}" class="form-control">{{ ministry.description }}</textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-custom">Update</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+    <!-- Add Ministry Button -->
+    <button class="btn btn-custom mb-3" data-bs-toggle="modal" data-bs-target="#addMinistryModal">Add Ministry</button>
+    
+    <!-- Pagination  -->
+    <div class="d-flex justify-content-center">
+        <nav aria-label="Customer pagination">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link anchor" href="?page=1" aria-label="First Page">
+                        <span aria-hidden="true">First</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link anchor" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                        <span aria-hidden="true">&lsaquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                <li class="page-item disabled">
+                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                </li>
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link anchor" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                        <span aria-hidden="true">&rsaquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link anchor" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last Page">
+                        <span aria-hidden="true">Last</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    <!-- Add Ministry Modal -->
+    <div class="modal fade" id="addMinistryModal" tabindex="-1" aria-labelledby="addMinistryModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addMinistryModalLabel">Add Ministry</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="post" action="{% url 'ministry_list' %}">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name</label>
+                            <input type="text" name="name" id="name" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea name="description" id="description" class="form-control"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-custom">Add</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
