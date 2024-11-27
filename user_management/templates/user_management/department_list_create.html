@@ -94,6 +94,7 @@
                                     <div class="mb-3">
                                         <label for="ministry{{ department.id }}" class="form-label">Ministry</label>
                                         <select name="ministry" id="ministry{{ department.id }}" class="form-control" required>
+                                                <option value="">Select ministry</option>
                                             {% for ministry in ministries %}
                                                 <option value="{{ ministry.id }}" {% if ministry.id == department.ministry.id %}selected{% endif %}>{{ ministry.name }}</option>
                                             {% endfor %}
@@ -174,6 +175,7 @@
                         <div class="mb-3">
                             <label for="ministry" class="form-label">Ministry</label>
                             <select name="ministry" id="ministry" class="form-control" required>
+                                <option value="">Select ministry</option>
                                 {% for ministry in ministries %}
                                     <option value="{{ ministry.id }}">{{ ministry.name }}</option>
                                 {% endfor %}

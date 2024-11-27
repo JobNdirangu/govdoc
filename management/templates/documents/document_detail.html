@@ -1,5 +1,4 @@
 {% extends 'home/base.html' %}
-
 {% block content %}
 <style>
     .anchor {
@@ -23,7 +22,30 @@
     .btn:hover {
         background-color: #204267;
     }
+    .select2-dropdown {
+        display: block !important;
+        visibility: visible !important;
+    }
+
+    .select2-results {
+        display: block !important;
+    }
+        .select2-dropdown {
+        z-index: 9999 !important;
+    }
+        .select2-container {
+        overflow: visible !important;
+    }
+        .select2-container .select2-selection--single {
+        pointer-events: auto !important;
+    }
+
 </style>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
+
 <div class="container mt-4">
     {% if messages %}
         <div aria-live="polite" aria-atomic="true" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
@@ -53,9 +75,14 @@
     <div class="card shadow-sm">
         <div class="card-body">
             <h4 class="card-title">
-                <i class="bi bi-file-earmark-text"></i> {{ document.name }}
+                <i class="lni lni-files"></i> {{ document.name }}  
+                <span class="float-end">
+                    <button class="btn-custom btn-sm bg-deepprimary" data-bs-toggle="modal" data-bs-target="#shareDocumentModal">
+                        <i class="lni lni-share"> Share</i>
+                    </button>
+                </span>
             </h4>
-            <p class="text-muted">{{ document.description }}</p>
+            <p class="text-muted">{{ document.description }} </p>
 
             <div class="row">
                 <div class="col-md-6">
@@ -91,11 +118,13 @@
             </ul>
 
             <a href="{% url 'add_related_document' document.pk %}" class="btn-custom btn-sm">
-                <i class="bi bi-file-plus"></i> Upload Related Document
+                <i class="lni lni-add-files"></i> Upload Related Document
             </a>
 
             <hr>
-
+            {{ministries}}
+            {{departments}}
+            {{users}}
             <h5>Approval Workflow</h5>
             <table class="table">
                 <thead>
@@ -163,6 +192,44 @@
     </div>
 </div>
 
+<!-- Share Document Modal -->
+<div class="modal fade" id="shareDocumentModal" tabindex="-1" aria-labelledby="shareDocumentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Share Document</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{% url 'share_document' document.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="share_with" class="form-label">Share With</label>
+                        <select id="share_with" name="share_with" class="form-select" required>
+                            <option value="" disabled selected>Select</option>
+                            <option value="user">User</option>
+                            <option value="department">Department</option>
+                            <option value="ministry">Ministry</option>
+                        </select>
+                    </div>
+                    
+                    <div id="dynamicSelectWrapper" class="mb-3"></div>
+                    <div class="mb-3">
+                        <label for="remarks" class="form-label">Remarks</label>
+                        <textarea id="remarks" name="remarks" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Share</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var toastElements = document.querySelectorAll('.toast');
@@ -171,5 +238,62 @@
             toast.show();
         });
     });
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+    console.log('Page loaded');
+    
+    $('#share_with').on('change', function () {
+        let selection = $(this).val();
+        let wrapper = $('#dynamicSelectWrapper');
+        console.log('Selection changed to:', selection); // Log selection value
+
+        wrapper.empty();
+
+        if (selection === 'user') {
+            console.log('Adding user select options'); // Debugging before adding options
+            wrapper.append(`
+                <label for="dynamic_select" class="form-label">Select User</label>
+                <select id="dynamic_select" name="user" class="form-select" required>
+                    <option value="">Select User</option>
+                    {% for user in users %}
+                        <option value="{{ user.id }}">{{ user.username }}</option>
+                    {% endfor %}
+                </select>
+            `);
+        } else if (selection === 'department') {
+            wrapper.append(`
+                <label for="dynamic_select" class="form-label">Select Department </label>
+                <select id="dynamic_select" name="department" class="form-select" required>
+                    <option value="">Select Department</option>
+                    {% for department in departments %}
+                        <option value="{{ department.id }}">{{ department.name }}</option>
+                    {% endfor %}
+                </select>
+            `);
+        } else if (selection === 'ministry') {
+            wrapper.append(`
+                <label for="dynamic_select" class="form-label">Select Ministry</label>
+                <select id="dynamic_select" name="ministry" class="form-select" required>
+                    <option value="">Select Ministry</option>
+                    {% for ministry in ministries %}
+                        <option value="{{ ministry.id }}">{{ ministry.name }}</option>
+                    {% endfor %}
+                </select>
+            `);
+        }
+
+        // Re-initialize select2 after appending the options
+        
+        $('#dynamic_select').select2({
+            placeholder: "Select an option",
+            allowClear: true,
+            width: "100%"
+        });
+
+
+        console.log('Select2 initialized');
+    });
+});
 </script>
 {% endblock %}

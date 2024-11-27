@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from . import views
 from django.contrib.auth import views as auth_views
+from .views import CustomLoginView
 
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
@@ -18,6 +19,8 @@ urlpatterns = [
     path('document/download/<int:pk>/', views.document_download, name='document_download'),
     path('document/view/<int:pk>/', views.document_view, name='document_view'),
     path('document/open/<int:pk>/', views.document_open, name='document_open'),
+    path('documents/share/<int:pk>/', views.share_document, name='share_document'),
+
 
     # Notifications
     path('notifications/', views.notifications, name='notifications'),
@@ -31,7 +34,8 @@ urlpatterns = [
 
     # Company Settings
     path('settings/', views.company_settings_view, name='company_settings'),
-
+    # user register
+    path('register/', views.register_user, name='register_user'),
     # Password Reset
     path('password_reset/', auth_views.PasswordResetView.as_view(template_name='registration/password_reset_form.html'), name='password_reset'),
     path('password_reset/done/', auth_views.PasswordResetDoneView.as_view(template_name='registration/password_reset_done.html'), name='password_reset_done'),
@@ -39,6 +43,7 @@ urlpatterns = [
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='registration/password_reset_complete.html'), name='password_reset_complete'),
     # Login/Logout
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
-    path('login/', auth_views.LoginView.as_view(template_name='home/login.html'), name='login'),
+    # path('login/', auth_views.LoginView.as_view(template_name='home/login.html'), name='login'),
+    path('login/', CustomLoginView.as_view(), name='login'),
 ]
 

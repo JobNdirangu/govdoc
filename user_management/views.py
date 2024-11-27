@@ -18,6 +18,29 @@ def dashboard_users(request):
     }
     return render(request, 'user_management/dashboard.html', context)
 
+
+def manage_inactive_users(request):
+    if not request.user.is_superuser:  
+        return redirect('login')
+
+    if request.method == 'POST':
+        user_id = request.POST.get('user_id')
+        try:
+            user = User.objects.get(id=user_id)
+            user.is_active = True
+            user.save()
+            messages.success(request, f"User {user.username} has been activated.")
+        except User.DoesNotExist:
+            messages.error(request, "User not found.")
+
+    inactive_users = User.objects.filter(is_active=False)
+    paginator = Paginator(inactive_users, 10)  # Show 10 users per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'user_management/manage_inactive_users.html', {'page_obj': page_obj})
+
+
 @login_required
 def user_list(request):
     users = User.objects.all()

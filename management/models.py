@@ -19,6 +19,14 @@ class Department(models.Model):
     def __str__(self):
         return self.name
     
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
+    ministry = models.ForeignKey(Ministry, on_delete=models.SET_NULL, null=True, blank=True)
+    personal_number = models.CharField(max_length=100, unique=True)
+    def __str__(self):
+        return f"{self.user.username}'s Profile"
+    
 # class Document(models.Model):
 #     """Main document model."""
 #     PRIORITY_CHOICES = [
@@ -69,12 +77,29 @@ class Document(models.Model):
 class DocumentAccess(models.Model):
     """Handles document sharing."""
     document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name='access_list')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='shared_documents')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='accessed_documents')
     department = models.ForeignKey(Department, on_delete=models.CASCADE, null=True, blank=True)
     ministry = models.ForeignKey(Ministry, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return f"Access for {self.document.name}"
+
+
+class DocumentShare(models.Model):
+    """Tracks the sharing of documents with users, departments, or ministries."""
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name='shares')
+    shared_with_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='received_shared_documents')
+    shared_with_department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name='received_shared_documents_department')
+    shared_with_ministry = models.ForeignKey(Ministry, on_delete=models.SET_NULL, null=True, blank=True, related_name='received_shared_documents_ministry')
+    shared_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shared_by_user')
+    share_date = models.DateTimeField(auto_now_add=True)
+    remarks = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Document '{self.document.name}' shared with {self.shared_with_user or self.shared_with_department or self.shared_with_ministry}"
+
+    class Meta:
+        unique_together = ('document', 'shared_with_user', 'shared_with_department', 'shared_with_ministry')
 
 class ApprovalTask(models.Model):
     """Tracks document approval workflows."""
@@ -105,7 +130,6 @@ class RelatedDocument(models.Model):
 
     def __str__(self):
         return f"Related to {self.parent_document.name}"
-
 
 class Workflow(models.Model):
     """Tracks approval workflows and status updates."""

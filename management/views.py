@@ -1,7 +1,7 @@
 import os
 from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import CompanySetting,ActionLog,Department,Document, DocumentAccess,Notification,RelatedDocument,User,Workflow
+from .models import CompanySetting,ActionLog,Department,Document, DocumentShare,Notification,RelatedDocument,User,Workflow,DocumentAccess,Ministry,Profile
 from .forms import CompanySettingForm,Workflow,Document,WorkflowForm,DocumentForm,RelatedDocumentForm
 from django.contrib.auth.decorators import login_required,permission_required
 from django.core.exceptions import PermissionDenied
@@ -37,7 +37,6 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
-
 register = template.Library()
 
 def custom_403_view(request, exception=None):
@@ -55,6 +54,66 @@ def dashboard(request):
         documents.serial_number = index + 1 + (page_obj.number - 1) * paginator.per_page
 
     return render(request, 'home/dashboard.html',{'page_obj': page_obj, 'recent':recent})
+
+# Login user custom
+class CustomLoginView(LoginView):
+    template_name = 'home/login.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['departments'] = Department.objects.all()
+        context['ministries'] = Ministry.objects.all()
+        return context
+    
+# Register user
+def register_user(request):
+    if request.method == 'POST':
+        firstname = request.POST.get('firstname')
+        lastname = request.POST.get('lastname')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        personal_number = request.POST.get('personal_number')
+        department_id = request.POST.get('department')
+        ministry_id = request.POST.get('ministry')
+
+        if not (firstname and lastname and email and password and personal_number and department_id and ministry_id):
+            messages.error(request, 'All fields are required.')
+            return redirect('register_user')
+
+        try:
+            with transaction.atomic():
+                user = User.objects.create_user(
+                    username=email,  # Use email as the username
+                    email=email,
+                    first_name=firstname,
+                    last_name=lastname,
+                    password=password,
+                    is_active=False  # User is inactive by default until admin approves
+                )
+
+                # Create Profile
+                Profile.objects.create(
+                    user=user,
+                    personal_number=personal_number,
+                    department_id=department_id,
+                    ministry_id=ministry_id,
+                )
+
+                messages.success(request, 'Account created successfully. Wait for admin approval.')
+                return redirect('login')  
+
+        except Exception as e:
+            messages.error(request, f'Error creating account: {str(e)}')
+            return redirect('register_user')
+
+    departments = Department.objects.all()
+    ministries = Ministry.objects.all()
+    return render(request, 'home/login.html', {
+        'departments': departments,
+        'ministries': ministries
+    })
+
+
 
 # View all documents
 @login_required
@@ -159,17 +218,23 @@ def document_detail(request, pk):
     document = get_object_or_404(Document, pk=pk)
     related_documents = document.related_documents.all().order_by("-added_date")
     workflows = document.workflows.all()
+    users=User.objects.all()
+    print(users)
     ActionLog.objects.create(
         document=document,
         action_by=request.user,
         action='Viewed Details',
         comments="Document details viewed"
     )
-    return render(request, 'documents/document_detail.html', {
+    context = {
         'document': document,
         'related_documents': related_documents,
         'workflows': workflows,
-    })
+        'users': users,
+        'departments': Department.objects.all(),
+        'ministries': Ministry.objects.all(),
+    }
+    return render(request, 'documents/document_detail.html', context)
 
 
 @login_required
@@ -229,6 +294,47 @@ def update_workflow(request, pk):
     else:
         form = WorkflowForm()
     return render(request, 'documents/update_workflow.html', {'form': form, 'document': document})
+
+# Share document
+def share_document(request, pk):
+    document = get_object_or_404(Document, pk=pk)
+    if request.method == "POST":
+        share_with = request.POST.get('share_with')
+        remarks = request.POST.get('remarks', '')
+
+        if share_with == 'user':
+            user_id = request.POST.get('user')
+            recipient = get_object_or_404(User, pk=user_id)
+            DocumentShare.objects.create(
+                document=document,
+                shared_with_user=recipient,
+                remarks=remarks,
+                shared_by=request.user
+            )
+            messages.success(request, f"Document shared with {recipient.username}.")
+        elif share_with == 'department':
+            department_id = request.POST.get('department')
+            recipient = get_object_or_404(Department, pk=department_id)
+            DocumentShare.objects.create(
+                document=document,
+                shared_with_department=recipient,
+                remarks=remarks,
+                shared_by=request.user
+            )
+            messages.success(request, f"Document shared with {recipient.name}.")
+        elif share_with == 'ministry':
+            ministry_id = request.POST.get('ministry')
+            recipient = get_object_or_404(Ministry, pk=ministry_id)
+            DocumentShare.objects.create(
+                document=document,
+                shared_with_ministry=recipient,
+                remarks=remarks,
+                shared_by=request.user
+            )
+            messages.success(request, f"Document shared with {recipient.name}.")
+        return redirect('document_detail', pk=document.pk)
+
+    return redirect('document_detail', pk=document.pk)
 
 # Theme settings
 @login_required
