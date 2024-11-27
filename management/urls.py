@@ -21,6 +21,10 @@ urlpatterns = [
     path('document/open/<int:pk>/', views.document_open, name='document_open'),
     path('documents/share/<int:pk>/', views.share_document, name='share_document'),
 
+    # Shared documents
+    path('user/shared-documents/', views.user_shared_documents, name='user_shared_documents'),
+    path('department/shared-documents/', views.department_shared_documents, name='department_shared_documents'),
+    path('ministry/shared-documents/', views.ministry_shared_documents, name='ministry_shared_documents'),
 
     # Notifications
     path('notifications/', views.notifications, name='notifications'),
