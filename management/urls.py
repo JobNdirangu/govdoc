@@ -18,6 +18,7 @@ urlpatterns = [
     # Open document
     path('document/download/<int:pk>/', views.document_download, name='document_download'),
     path('document/view/<int:pk>/', views.document_view, name='document_view'),
+    path('documents/view/<int:document_id>/', views.view_pdf, name='view_pdf'),
     path('document/open/<int:pk>/', views.document_open, name='document_open'),
     path('documents/share/<int:pk>/', views.share_document, name='share_document'),
 

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>View Document</h2>
+<iframe 
+    src="{% url 'view_pdf' document_id=document.id %}" 
+    width="100%" 
+    height="800px" 
+    style="border: none;">
+    Your browser does not support PDFs.
+</iframe>
+{% endblock %}

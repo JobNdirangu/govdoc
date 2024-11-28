@@ -85,7 +85,7 @@
                                 </a>
                             </li> -->
                             <li>
-                                <a class="dropdown-item" href="{% url 'document_view' document.pk %}">
+                                <a class="dropdown-item" href="{% url 'view_pdf' document.pk %}">
                                     <i class="fas fa-file"></i> Open
                                 </a>
                             </li>
@@ -189,11 +189,10 @@
                         <input type="file" name="file" id="documentFile" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label for="documentPriority" class="form-label">Priority</label>
-                        <select name="priority" id="documentPriority" class="form-select">
-                            <option value="High">High</option>
-                            <option value="Medium">Medium</option>
-                            <option value="Low">Low</option>
+                        <label for="documentVisibility" class="form-label">Visibility</label>
+                        <select name="visibility" id="documentVisibility" class="form-select" required>
+                            <option value="Private" selected>Private</option>
+                            <option value="Public">Public</option>
                         </select>
                     </div>
                 </div>

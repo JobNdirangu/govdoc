@@ -39,6 +39,8 @@
         .select2-container .select2-selection--single {
         pointer-events: auto !important;
     }
+    
+
 
 </style>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
@@ -86,18 +88,21 @@
 
             <div class="row">
                 <div class="col-md-6">
+                    
                     <p><strong>Document ID:</strong> {{ document.id }}</p>
                     <p><strong>Status:</strong> 
                         <span class="rounded-pill {% if document.status == 'Pending' %}badge badge-sm bg-warning text-light{% else %}badge badge-sm bg-danger text-light{% endif %}" style="font-size: 0.75rem; padding: 0.25rem 0.3rem;">
                             {{ document.get_status_display }}
                         </span>
                     </p>
+                    <p><strong>Shares:</strong> {{shares}}</p>
                     <p><strong>Priority:</strong> {{ document.get_priority_display }}</p>
                 </div>
                 <div class="col-md-6">
                     <p><strong>Date:</strong> {{ document.upload_date|date:"d-m-Y" }}</p>
                     <p><strong>Signed by:</strong> {{ document.uploaded_by }}</p>
-                    <p><strong>Action:</strong> {{ document.action }}</p>
+                    <p><strong>Total Views:</strong> {{views}}</p>
+                    <p><strong>Related Docs:</strong> {{ count_related_documents }}</p>
 
                 </div>
             </div>
@@ -122,9 +127,6 @@
             </a>
 
             <hr>
-            {{ministries}}
-            {{departments}}
-            {{users}}
             <h5>Approval Workflow</h5>
             <table class="table">
                 <thead>
@@ -164,30 +166,32 @@
             <hr>
 
             <h5>Audit Log</h5>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Time</th>
-                        <th>User</th>
-                        <th>Action</th>
-                        <th>Comment</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for log in document.action_logs.all %}
-                    <tr>
-                        <td>{{ log.timestamp|date:"Y-m-d H:i" }}</td>
-                        <td>{{ log.action_by }}</td>
-                        <td>{{ log.action }}</td>
-                        <td>{{ log.comments }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="3" class="text-muted">No actions logged yet.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="table table-hover text-wrap">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Comment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in document.action_logs.all %}
+                        <tr>
+                            <td >{{ log.timestamp|date:"Y-m-d H:i" }}</td>
+                            <td >{{ log.action_by }}</td>
+                            <td >{{ log.action }}</td>
+                            <td >{{ log.comments }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-muted">No actions logged yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

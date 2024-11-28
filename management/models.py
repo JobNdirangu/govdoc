@@ -26,37 +26,7 @@ class Profile(models.Model):
     personal_number = models.CharField(max_length=100, unique=True)
     def __str__(self):
         return f"{self.user.username}'s Profile"
-    
-# class Document(models.Model):
-#     """Main document model."""
-#     PRIORITY_CHOICES = [
-#         ('High', 'High'),
-#         ('Medium', 'Medium'),
-#         ('Low', 'Low'),
-#     ]
-#     STATUS_CHOICES = [
-#         ('Pending', 'Pending'),
-#         ('Processing', 'Processing'),
-#         ('Completed', 'Completed'),
-#     ]
-#     ACTION_CHOICES = [
-#         ('Approved', 'Approved'),
-#         ('Rejected', 'Rejected'),
-#         ('Deleted', 'Deleted'),
-#         ('None', 'None'),
-#     ]
 
-#     name = models.CharField(max_length=255)
-#     description = models.TextField(blank=True, null=True)
-#     file = models.FileField(upload_to='documents/')
-#     uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uploaded_documents')
-#     upload_date = models.DateTimeField(auto_now_add=True)
-#     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='Medium')
-#     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='Pending')
-#     action = models.CharField(max_length=15, choices=ACTION_CHOICES, default='None')
-
-#     def __str__(self):
-#         return self.name
 
 class Document(models.Model):
     VISIBILITY_CHOICES = [
@@ -156,7 +126,7 @@ class ActionLog(models.Model):
     """Tracks actions performed on documents."""
     document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name='action_logs')
     action_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    action = models.CharField(max_length=15)
+    action = models.CharField(max_length=60)
     timestamp = models.DateTimeField(auto_now_add=True)
     comments = models.TextField(blank=True, null=True)
 

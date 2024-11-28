@@ -44,7 +44,7 @@ def custom_403_view(request, exception=None):
 
 @login_required
 def dashboard(request):
-    documents = Document.objects.all().order_by('-upload_date')
+    documents = Document.objects.all().order_by('-upload_date').filter(visibility='Public')
     recent = Document.objects.all().order_by('-upload_date')[:5]
     paginator = Paginator(documents, 10)  
     page_number = request.GET.get('page')
@@ -112,7 +112,6 @@ def register_user(request):
         'departments': departments,
         'ministries': ministries
     })
-
 
 
 # View all documents
@@ -204,22 +203,52 @@ def document_view(request, pk):
         return response
 
 
-# @login_required
-# def document_view(request, pk):
-#     document = get_object_or_404(Document, pk=pk)
-#     mime_type, _ = mimetypes.guess_type(document.file.path)
-#     response = HttpResponse(document.file, content_type=mime_type)
-#     response['Content-Disposition'] = f'inline; filename="{document.file.name}"'
-#     return response
+def view_pdf(request, document_id):
+    try:
+        # Fetch the document using the ID
+        document = get_object_or_404(Document, pk=document_id)
+
+        # Get the file path
+        file_path = document.file.path
+
+        # Verify that the file exists and is not empty
+        if not os.path.exists(file_path):
+            raise Http404("The requested document does not exist.")
+        if os.path.getsize(file_path) == 0:
+            raise Http404("The requested document is empty or corrupted.")
+
+        # Using FileResponse to stream the file, it handles opening/closing the file correctly
+        with open(file_path, 'rb') as pdf_file:
+            response = FileResponse(pdf_file, content_type='application/pdf')
+
+            # Set content disposition for inline display (i.e., view in the browser)
+            response['Content-Disposition'] = f'inline; filename="{document.file.name}"'
+
+            # Prevent caching
+            response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            response['Pragma'] = 'no-cache'
+            response['Expires'] = '0'
+
+            return response
+
+    except FileNotFoundError:
+        raise Http404("The requested document was not found.")
+    except Exception as e:
+        print(f"Error: {e}")  # Debugging log
+        raise Http404("An error occurred while processing your request.")
 
 # Document information
 @login_required
 def document_detail(request, pk):
     document = get_object_or_404(Document, pk=pk)
     related_documents = document.related_documents.all().order_by("-added_date")
+    count_related_documents = document.related_documents.all().count()
     workflows = document.workflows.all()
+    shares=len(document.shares.all())
+    views = document.action_logs.filter(action="Viewed Details").count()
+
+
     users=User.objects.all()
-    print(users)
     ActionLog.objects.create(
         document=document,
         action_by=request.user,
@@ -229,7 +258,10 @@ def document_detail(request, pk):
     context = {
         'document': document,
         'related_documents': related_documents,
+        'count_related_documents':count_related_documents,
         'workflows': workflows,
+        'shares':shares,
+        'views':views,
         'users': users,
         'departments': Department.objects.all(),
         'ministries': Ministry.objects.all(),
@@ -255,7 +287,7 @@ def upload_document(request):
             return redirect('document_list')
     else:
         form = DocumentForm()
-    return render(request, 'documents/upload_document.html', {'form': form})
+    return redirect('document_list')
 
 
 @login_required
@@ -274,6 +306,8 @@ def add_related_document(request, pk):
                 action='Additional documents',
                 comments="Related documents upload has been created."
             )
+            messages.success(request, f"Related Document uploaded with {request.user}.")
+
             return redirect('document_detail', pk=document.pk)
     else:
         form = RelatedDocumentForm()
@@ -311,6 +345,12 @@ def share_document(request, pk):
                 remarks=remarks,
                 shared_by=request.user
             )
+            ActionLog.objects.create(
+                document=document,
+                action_by=request.user,   
+                action=f"Shared to: {recipient.username}",
+                comments=remarks
+            )
             messages.success(request, f"Document shared with {recipient.username}.")
         elif share_with == 'department':
             department_id = request.POST.get('department')
@@ -320,6 +360,12 @@ def share_document(request, pk):
                 shared_with_department=recipient,
                 remarks=remarks,
                 shared_by=request.user
+            )
+            ActionLog.objects.create(
+                document=document,
+                action_by=request.user,  
+                action=f"Shared to Department: {recipient.name}",
+                comments=remarks
             )
             messages.success(request, f"Document shared with {recipient.name}.")
         elif share_with == 'ministry':
@@ -331,12 +377,63 @@ def share_document(request, pk):
                 remarks=remarks,
                 shared_by=request.user
             )
+            ActionLog.objects.create(
+                document=document,
+                action_by=request.user,  
+                action=f"Shared to ministry: {recipient.name}",
+                comments=remarks 
+            )
             messages.success(request, f"Document shared with {recipient.name}.")
         return redirect('document_detail', pk=document.pk)
 
     return redirect('document_detail', pk=document.pk)
 
-# Theme settings
+# view shared documents
+@login_required
+def user_shared_documents(request):
+    shared_documents = DocumentShare.objects.filter(shared_with_user=request.user)
+    paginator = Paginator(shared_documents, 10)  
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    for index, shared_documents in enumerate(page_obj.object_list):
+        shared_documents.serial_number = index + 1 + (page_obj.number - 1) * paginator.per_page
+    
+    context = {
+        'page_obj': page_obj
+        }
+    return render(request, 'shared/user_documents.html', context)
+
+@login_required
+def department_shared_documents(request):
+    department = request.user.profile.department
+    shared_documents = DocumentShare.objects.filter(shared_with_department=department)
+    paginator = Paginator(shared_documents, 10)  
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    for index, shared_documents in enumerate(page_obj.object_list):
+        shared_documents.serial_number = index + 1 + (page_obj.number - 1) * paginator.per_page
+
+    return render(request, 'shared/department_documents.html', {'page_obj': page_obj})
+
+@login_required
+def ministry_shared_documents(request):
+    ministry = request.user.profile.ministry
+    shared_documents = DocumentShare.objects.filter(shared_with_ministry=ministry)
+    paginator = Paginator(shared_documents, 10)  
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    for index, shared_documents in enumerate(page_obj.object_list):
+        shared_documents.serial_number = index + 1 + (page_obj.number - 1) * paginator.per_page
+    
+    
+
+    return render(request, 'shared/ministry_documents.html', {'page_obj': page_obj})
+
+
+# Theme settings handles in user_management app
 @login_required
 def company_settings_view(request):
     setting, created = CompanySetting.objects.get_or_create(id=1)
@@ -358,7 +455,7 @@ def company_settings_view(request):
         form = CompanySettingForm(instance=setting)
     theme_choice = setting.theme_choice
 
-    return render(request, 'home/company_settings.html', {'form': form, 'theme_choice': theme_choice})
+    return render(request, 'user_management/company_settings.html', {'form': form, 'theme_choice': theme_choice})
 
 #  Notifications
 @login_required
@@ -389,7 +486,11 @@ def clear_notifications(request):
 
 
 # Initialize the summarization pipeline with a specific model
-summarizer = pipeline("summarization", model="facebook/bart-large-cnn", revision="main")
+# summarizer = pipeline("summarization", model="facebook/bart-large-cnn", revision="main")
+# summarizer = pipeline("summarization", model="EleutherAI/gpt-neo-1.3B")
+
+summarizer = pipeline("summarization", model="t5-small")
+
 
 def summarize_pdf(request, document_id):
     try:
