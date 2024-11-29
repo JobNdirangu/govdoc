@@ -18,6 +18,8 @@ urlpatterns = [
     # Open document
     path('document/download/<int:pk>/', views.document_download, name='document_download'),
     path('document/view/<int:pk>/', views.document_view, name='document_view'),
+    # path('documents/<int:document_id>/view/', views.view_document, name='view_document'),
+
     path('documents/view/<int:document_id>/', views.view_pdf, name='view_pdf'),
     path('document/open/<int:pk>/', views.document_open, name='document_open'),
     path('documents/share/<int:pk>/', views.share_document, name='share_document'),
@@ -36,6 +38,7 @@ urlpatterns = [
     # Summarize
     # path('documents/<int:pk>/summarize/', views.summarize_document, name='document_summarize'),
     path('summarize/<int:document_id>/', views.summarize_pdf, name='summarize_pdf'),
+    path('summary_result/', views.summary_result, name='summary_result'),
 
     # Company Settings
     path('settings/', views.company_settings_view, name='company_settings'),

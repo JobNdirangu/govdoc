@@ -1,12 +1,47 @@
-{% extends "base.html" %}
+{% extends 'home/base.html' %}
 
 {% block content %}
-<h2>View Document</h2>
-<iframe 
-    src="{% url 'view_pdf' document_id=document.id %}" 
-    width="100%" 
-    height="800px" 
-    style="border: none;">
-    Your browser does not support PDFs.
-</iframe>
+<style>
+    .anchor {
+        background-color: #0e2238;
+        color: aliceblue;
+    }
+    .anchor:hover {
+        background-color: #204267;
+        color: aliceblue;
+    }
+    .btn-custom {
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #0a1a2e;
+        color: #fff;
+        font-size: 12px;
+        cursor: pointer;
+        display: inline-block !important;
+    }
+    .btn:hover {
+        background-color: #204267;
+    }
+</style>
+
+<h5>Viewing: {{ document.name }}</h5>
+<!-- Breadcrumbs for easy navigation -->
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'document_list' %}">Documents</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ document.name }}</li>
+    </ol>
+</nav>
+
+<div class="embed-responsive embed-responsive-16by9" style="height: 80vh;">
+    <iframe 
+        class="embed-responsive-item" 
+        src="{{ document.file.url }}" 
+        style="width: 100%; height: 100%; border: none;" 
+        allowfullscreen>
+    </iframe>
+</div>
+
+<a href="{% url 'document_list' %}" class="btn-custom bg-primary mt-3">Back to Documents</a>
 {% endblock %}

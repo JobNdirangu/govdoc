@@ -40,24 +40,27 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'management',
     'user_management',
+    'corsheaders',
 ]
-INSTALLED_APPS += ['corsheaders']
 
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'management.middleware.timezone_middleware.TimezoneMiddleware', 
-    
-     
-
+    # 'whitenoise.middleware.WhiteNoiseMiddleware',
+    # 'corsheaders.middleware.CorsMiddleware',
 ]
-MIDDLEWARE.insert(0, 'corsheaders.middleware.CorsMiddleware')
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10 MB
+
 
 ROOT_URLCONF = 'govdoc.urls'
 
@@ -145,10 +148,11 @@ if not DEBUG:  # Assuming DEBUG = False in production
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Make sure this path is correct
 
-MEDIA_ROOT = BASE_DIR / 'media'  
+# MEDIA_ROOT = BASE_DIR / 'media'  
+# MEDIA_URL = '/media/'
+
 MEDIA_URL = '/media/'
-
-
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field

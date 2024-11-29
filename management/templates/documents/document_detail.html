@@ -82,6 +82,9 @@
                     <button class="btn-custom btn-sm bg-deepprimary" data-bs-toggle="modal" data-bs-target="#shareDocumentModal">
                         <i class="lni lni-share"> Share</i>
                     </button>
+                    <a class="btn-custom btn-sm bg-deepprimary" href="{% url 'document_download' document.pk  %}">
+                        <i class="lni lni-download"> Download</i>
+                    </a>
                 </span>
             </h4>
             <p class="text-muted">{{ document.description }} </p>

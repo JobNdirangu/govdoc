@@ -38,7 +38,7 @@
                 <!-- Recent Files Section -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5>5 Recent Files</h5>
+                        <h5>Recent Files</h5>
                     </div>
                     <div class="card-body d-flex flex-wrap">
                         {% for document in recent %}
@@ -57,15 +57,13 @@
                     <div class="card-header">
                         <h5>Public Files ({{ page_obj.paginator.count }}) Total</h5>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body table-responsive">
                         <table class="table table-bordered">
                             <thead>
                                 <tr>
                                     <th>No</th>
                                     <th>Name</th>
                                     <th>Desc</th>
-                                    <th>Status</th>
-                                    <th>Priority</th>
                                     <th>Date</th>
                                     <th>Actions</th>
                                 </tr>
@@ -76,8 +74,6 @@
                                     <td>{{ document.serial_number }}</td>
                                     <td>{{ document.name }}</td>
                                     <td>{{ document.description }}</td>
-                                    <td>{{ document.status }}</td>
-                                    <td>{{ document.priority }}</td>
                                     <td>{{ document.upload_date|date:"Y-m-d" }}</td>
                         
                                     <td>
@@ -100,11 +96,6 @@
                                                     </a>
                                                 </li>
                                                 <li>
-                                                    <a class="dropdown-item" href="">
-                                                        <i class="fas fa-edit"></i> Edit
-                                                    </a>
-                                                </li>
-                                                <li>
                                                     <a class="dropdown-item" href="{% url 'summarize_pdf' document.pk %}" >
                                                         <i class="fas fa-file-alt"></i> Ai Summarize
                                                     </a>
@@ -115,11 +106,6 @@
                                                     </a>
                                                 </li>
                                                 
-                                                <li>
-                                                    <a class="dropdown-item text-danger" href="">
-                                                        <i class="fas fa-trash"></i> Delete
-                                                    </a>
-                                                </li>
                                             </ul>
                                         </div>
                                     </td>
@@ -176,11 +162,13 @@
     
             <!-- Right Column: File Details -->
             <div class="col-md-4">
-                <div class="card">
+                <!-- <div class="card">
                     <div class="card-header">
                         <h5>File Details</h5>
                     </div>
                     <div class="card-body">
+                        <p><strong>Shares:</strong> {{ shares }}</p>
+
                         {% if selected_file %}
                             <h6>{{ selected_file.name }}</h6>
                             <p><strong>Modified:</strong> {{ selected_file.modified|date:"Y-m-d" }}</p>
@@ -192,17 +180,18 @@
                             <p class="text-muted">Select a file to view details.</p>
                         {% endif %}
                     </div>
-                </div>
+                </div> -->
     
                 <!-- File Insights Section -->
-                <div class="card mt-4">
+                <div class="card ">
                     <div class="card-header">
-                        <h5>File Insights</h5>
+                        <h5> File Insights:{{ user.username }}</h5>
                     </div>
                     <div class="card-body">
-                        <p><strong>Total Views:</strong> {{ insights.total_views }}</p>
-                        <p><strong>Comments:</strong> {{ insights.comments }}</p>
-                        <p><strong>Shares:</strong> {{ insights.shares }}</p>
+                        <p><strong>Total Views:</strong> {{ views }}</p>
+                        <p><strong>Uploads:</strong> {{ uploads }}</p>
+                        <p><strong>Shares:</strong> {{ shares }}</p>
+                        <p><strong>Downloads:</strong> {{ downloads }}</p>
                         <div>
                             <canvas id="fileInsightsChart"></canvas>
                         </div>

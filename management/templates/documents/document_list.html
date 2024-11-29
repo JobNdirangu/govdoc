@@ -44,89 +44,106 @@
 <h1>Documents {{ page_obj.paginator.count }}</h1>
 
 <!-- Button to trigger the modal -->
-<button type="button" class="btn-custom btn-primary lni lni-plus" data-bs-toggle="modal" data-bs-target="#addDocumentModal">
+<button type="button" class="btn-custom btn-primary lni lni-plus  mb-3" data-bs-toggle="modal" data-bs-target="#addDocumentModal">
     Upload  Document
 </button>
 
 <!-- Document List Table -->
-<div class="table-responsive">
-    <table class="table table-hover  mt-3">
-        <thead>
-            <tr>
-                <th>No</th>
-                <th>Name</th>
-                <th>Desc</th>
-                <th>Status</th>
-                <th>Priority</th>
-                <th>Date</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for document in page_obj %}
-            <tr>
-                <td>{{ document.serial_number }}</td>
-                <td>{{ document.name }}</td>
-                <td>{{ document.description }}</td>
-                <td>{{ document.status }}</td>
-                <td>{{ document.priority }}</td>
-                <td>{{ document.upload_date|date:"Y-m-d" }}</td>
-    
-                <td>
-                    <div class="dropdown">
-                        <button class="btn-custom dropdown-toggle" type="button" id="dropdownMenuButton{{ document.pk }}" 
-                                data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-ellipsis-v"></i> <!-- Three-dot icon -->
-                        </button>
-                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ document.pk }}">
-                            <!-- <li>
-                                <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#viewDocumentModal" onclick="viewDocument('{{ document.file.url }}')">
-                                    <i class="fas fa-file-open"></i> Open
-                                </a>
-                            </li> -->
-                            <li>
-                                <a class="dropdown-item" href="{% url 'view_pdf' document.pk %}">
-                                    <i class="fas fa-file"></i> Open
-                                </a>
-                            </li>
-                            
-                            
-                            <li>
-                                <a class="dropdown-item" href="{% url 'document_detail' document.pk %}">
-                                    <i class="fas fa-eye"></i> View Details
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editDocumentModal{{ document.pk }}" >
-                                    <i class="fas fa-edit"></i> Edit
-                                </a>
-                            </li>
-                            
-                            <li>
-                                <a class="dropdown-item" href="{% url 'summarize_pdf' document.pk %}" >
-                                    <i class="fas fa-file-alt"></i> Ai Summarize
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{% url 'document_view' document.pk %}">
-                                    <i class="fas fa-download"></i> Download
-                                </a>
-                            </li>
-                            
-                            <li>
-                                <a class="dropdown-item text-danger" href="">
-                                    <i class="fas fa-trash"></i> Delete
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </td>
-                
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="d-flex align-items-center">
+    <i class="lni lni-search me-2 text-deepprimary "></i>
+    <input type="text" id="searchInput" class="form-control" placeholder="Search documents...">
+</div>
 
+<div class="table-responsive">
+    <div id="documentTable">
+        <table class="table table-hover mt-3">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for document in page_obj %}
+                <tr>
+                    <td>{{ document.serial_number }}</td>
+                    <td>{{ document.name }}</td>
+                    <td>{{ document.description }}</td>
+                    <td><li class="lni lni-files"></li></td>
+                    <td>{{ document.upload_date|date:"Y-m-d" }}</td>
+                    <td>
+                        <div class="dropdown">
+                            <button class="btn-custom dropdown-toggle" type="button" id="dropdownMenuButton{{ document.pk }}" 
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-ellipsis-v"></i> <!-- Three-dot icon -->
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ document.pk }}">
+                                <!-- <li>
+                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#viewDocumentModal" onclick="viewDocument('{{ document.file.url }}')">
+                                        <i class="fas fa-file-open"></i> Open
+                                    </a>
+                                </li> -->
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'document_view' document.pk %}">
+                                        <i class="fas fa-file"></i> Open
+                                    </a>
+                                </li>                               
+                                
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'document_detail' document.pk %}">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editDocumentModal{{ document.pk }}" >
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                </li>
+                                
+                                <li>
+                                    <a class="dropdown-item" href="javascript:void(0);" onclick="startSummarizing({{ document.pk }})">
+                                        <i class="fas fa-file-alt"></i> Ai Summarize
+                                    </a>
+                                </li>
+                                
+                                <!-- Add a loading spinner (hidden initially) -->
+                                <div id="loadingSpinner" style="display: none;">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p>Processing your request...</p>
+                                </div>
+
+                                <div id="progress-indicator" style="display: none;">
+                                    <p>Summarizing document, please wait...</p>
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                </div>
+
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'document_download' document.pk %}">
+                                        <i class="fas fa-download"></i> Download
+                                    </a>
+                                </li>
+                                
+                                <li>
+                                    <a class="dropdown-item text-danger" href="">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 <!-- Pagination  -->
 <div class="d-flex justify-content-center">
@@ -275,10 +292,92 @@
         });
     });
 
+
+    document.getElementById('searchInput').addEventListener('keyup', function () {
+        const query = this.value;
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', `?q=${query}`, true);
+        xhr.setRequestHeader('x-requested-with', 'XMLHttpRequest');
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                const response = JSON.parse(xhr.responseText);
+                const tableBody = document.querySelector('#documentTable tbody');
+                tableBody.innerHTML = '';
+
+                response.documents.forEach((doc, index) => {
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${doc.name}</td>
+                            <td>${doc.description}</td>
+                            <td><li class="lni lni-files"></li></td>
+                            <td>${doc.upload_date}</td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn-custom dropdown-toggle" type="button" id="dropdownMenuButton${doc.id}" 
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-ellipsis-v"></i> <!-- Three-dot icon -->
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton${doc.id}">
+                                        <li>
+                                            <a class="dropdown-item" href="/view-pdf/${doc.id}/">
+                                                <i class="fas fa-file"></i> Open
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="/management/document/${doc.id}/">
+                                                <i class="fas fa-eye"></i> View Details
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editDocumentModal${doc.id}">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="/management/summarize/${doc.id}/">
+                                                <i class="fas fa-file-alt"></i> AI Summarize
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="/document-view/${doc.id}/">
+                                                <i class="fas fa-download"></i> Download
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item text-danger" href="#" onclick="deleteDocument(${doc.id})">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        `;
+
+                });
+            }
+        };
+        xhr.send();
+    });
+
+    window.startSummarizing = function(documentId) {
+            var progressIndicator = document.getElementById("progress-indicator");
+            progressIndicator.style.display = "block";
+
+            // Simulating the summarize process with a timeout
+            setTimeout(function() {
+                progressIndicator.style.display = "none";
+                alert('Document ' + documentId + ' has been summarized.');
+            }, 5000); // Adjust time as needed
+        };
+    
+
     function viewDocument(url) {
         var iframe = document.getElementById('documentIframe');
         iframe.src = url;
     }
+
 
 </script>
 

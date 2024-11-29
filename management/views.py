@@ -1,4 +1,14 @@
 import os
+import logging
+
+# Set TensorFlow to suppress logs completely
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0' 
+import tensorflow as tf
+tf.get_logger().setLevel('ERROR')
+
+# Optionally suppress TensorFlow's internal logs further by adjusting the root logger
+logging.getLogger('tensorflow').setLevel(logging.ERROR)
 from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import CompanySetting,ActionLog,Department,Document, DocumentShare,Notification,RelatedDocument,User,Workflow,DocumentAccess,Ministry,Profile
@@ -13,7 +23,7 @@ from django.db import transaction
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.utils.dateparse import parse_date
-from django.db.models import Sum,F, FloatField,Count,ExpressionWrapper,DecimalField,CharField,OuterRef, Subquery,IntegerField
+from django.db.models import Q,Sum,F, FloatField,Count,ExpressionWrapper,DecimalField,CharField,OuterRef, Subquery,IntegerField
 from .models import Notification 
 from django.utils import timezone
 import json
@@ -33,7 +43,6 @@ import fitz  # PyMuPDF
 from transformers import pipeline
 from urllib.parse import quote
 import mimetypes
-import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
@@ -45,15 +54,28 @@ def custom_403_view(request, exception=None):
 @login_required
 def dashboard(request):
     documents = Document.objects.all().order_by('-upload_date').filter(visibility='Public')
-    recent = Document.objects.all().order_by('-upload_date')[:5]
+    recent = Document.objects.all().order_by('-upload_date').filter(visibility='Public')[:5]    
+    shares = DocumentShare.objects.filter(shared_by=request.user).count()
+    views = ActionLog.objects.filter(action="Viewed Details", action_by_id=request.user).count()
+    uploads = ActionLog.objects.filter(action="created", action_by_id=request.user).count()
+    downloads = ActionLog.objects.filter(action="Download", action_by_id=request.user).count()
+
     paginator = Paginator(documents, 10)  
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
     for index, documents in enumerate(page_obj.object_list):
         documents.serial_number = index + 1 + (page_obj.number - 1) * paginator.per_page
+    context={
+        'page_obj': page_obj, 
+        'recent':recent,
+        'shares':shares,
+        'views':views,
+        'uploads':uploads,
+        'downloads':downloads,
+    }
 
-    return render(request, 'home/dashboard.html',{'page_obj': page_obj, 'recent':recent})
+    return render(request, 'home/dashboard.html',context)
 
 # Login user custom
 class CustomLoginView(LoginView):
@@ -117,13 +139,28 @@ def register_user(request):
 # View all documents
 @login_required
 def document_list(request):
-    documents = Document.objects.all().order_by('-upload_date')
-    paginator = Paginator(documents, 10)  
+    query = request.GET.get('q', '')  
+    user_documents = Document.objects.filter(uploaded_by=request.user) 
+
+    documents = user_documents.filter(
+        Q(name__icontains=query) |
+        Q(description__icontains=query) |
+        Q(file__icontains=query)
+    ).order_by('-upload_date') if query else user_documents.order_by('-upload_date')
+
+    paginator = Paginator(documents, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    for index, documents in enumerate(page_obj.object_list):
-        documents.serial_number = index + 1 + (page_obj.number - 1) * paginator.per_page
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        # Return search results as JSON for live search
+        data = {
+            'documents': list(page_obj.object_list.values('id', 'name', 'description', 'upload_date')),
+        }
+        return JsonResponse(data)
+
+    for index, document in enumerate(page_obj.object_list):
+        document.serial_number = index + 1 + (page_obj.number - 1) * paginator.per_page
 
     return render(request, 'documents/document_list.html', {'page_obj': page_obj})
 
@@ -134,25 +171,11 @@ def document_edit(request, pk):
         form = DocumentForm(request.POST, request.FILES, instance=document)
         if form.is_valid():
             form.save()
-            return redirect('document_list')  # Redirect back to the document list view
+            return redirect('document_list')  
     else:
         form = DocumentForm(instance=document)
     return render(request, 'management/document_edit.html', {'form': form, 'document': document})
 
-# Download Document
-@login_required
-def document_download(request, pk):
-    document = get_object_or_404(Document, pk=pk)
-    file_path = document.file.path
-    if not os.path.exists(file_path):
-        raise Http404("File not found")    
-    try:
-        with open(file_path, 'rb') as file:
-            response = FileResponse(file, as_attachment=True, filename=document.file.name)
-            response['Content-Type'] = 'application/pdf'  # Optional, change based on file type
-            return response
-    except Exception as e:
-        raise Http404(f"Error opening file: {str(e)}")
     
 # Open Document
 @login_required
@@ -171,47 +194,66 @@ def document_open(request, pk):
     return response
 
 
-# @login_required
-# def document_view(request, pk):
-#     document = get_object_or_404(Document, pk=pk)
-#     file_url = request.build_absolute_uri(document.file.url)
-#     file_url = quote(file_url, safe=':/')
-#     # file_url = unquote(document.file.url)    
-#     ActionLog.objects.create(
-#         document=document,
-#         action_by=request.user,
-#         action='Viewed in System',
-#         comments="Document has been opened"
-#     )
-#     return render(request, 'documents/document_view.html', {'document': document, 'file_url': file_url})
-
-
 @login_required
 def document_view(request, pk):
     document = get_object_or_404(Document, pk=pk)
-    file_path = document.file.path
+    file_url = request.build_absolute_uri(document.file.url)
+    file_url = quote(file_url, safe=':/')
+    # file_url = unquote(document.file.url)    
+    ActionLog.objects.create(
+        document=document,
+        action_by=request.user,
+        action='Viewed in System',
+        comments="Document has been opened"
+    )
+    return render(request, 'documents/document_view.html', {'document': document, 'file_url': file_url})
 
-    if not os.path.exists(file_path):
-        raise Http404("File not found")
+# Download document
+@login_required
+def document_download(request, pk):
+    document = get_object_or_404(Document, pk=pk)
+    file_url = request.build_absolute_uri(document.file.url)
+    file_url = quote(file_url, safe=':/')
+    # if mime_type is None:
+    mime_type = 'application/octet-stream'
 
-    mime_type, _ = mimetypes.guess_type(file_path)
-    if mime_type is None:
-        mime_type = 'application/octet-stream'
-    else:
-        response = FileResponse(open(file_path, 'rb'), content_type=mime_type)
-        response['Content-Disposition'] = 'inline; filename="{}"'.format(document.file.name)
-        return response
+    response = render(request, 'documents/document_list.html', {
+        'document': document,
+    })    
+    response['Content-Disposition'] = 'inline; filename="{}"'.format(document.file.name)
+    response['Content-Type'] = mime_type    
+     
+    ActionLog.objects.create(
+        document=document,
+        action_by=request.user,
+        action='Download',
+        comments="Document has been downloaded"
+    )
+    return response 
 
 
+# @login_required
+# def document_view(request, pk):
+#     document = get_object_or_404(Document, pk=pk)
+#     file_path = document.file.path
+
+#     if not os.path.exists(file_path):
+#         raise Http404("File not found")
+
+#     mime_type, _ = mimetypes.guess_type(file_path)
+#     if mime_type is None:
+#         mime_type = 'application/octet-stream'
+#     else:
+#         response = FileResponse(open(file_path, 'rb'), content_type=mime_type)
+#         response['Content-Disposition'] = 'inline; filename="{}"'.format(document.file.name)
+#         return response
+
+@login_required      
 def view_pdf(request, document_id):
     try:
-        # Fetch the document using the ID
         document = get_object_or_404(Document, pk=document_id)
-
-        # Get the file path
         file_path = document.file.path
 
-        # Verify that the file exists and is not empty
         if not os.path.exists(file_path):
             raise Http404("The requested document does not exist.")
         if os.path.getsize(file_path) == 0:
@@ -221,7 +263,6 @@ def view_pdf(request, document_id):
         with open(file_path, 'rb') as pdf_file:
             response = FileResponse(pdf_file, content_type='application/pdf')
 
-            # Set content disposition for inline display (i.e., view in the browser)
             response['Content-Disposition'] = f'inline; filename="{document.file.name}"'
 
             # Prevent caching
@@ -247,7 +288,6 @@ def document_detail(request, pk):
     shares=len(document.shares.all())
     views = document.action_logs.filter(action="Viewed Details").count()
 
-
     users=User.objects.all()
     ActionLog.objects.create(
         document=document,
@@ -268,7 +308,7 @@ def document_detail(request, pk):
     }
     return render(request, 'documents/document_detail.html', context)
 
-
+# Document Upload
 @login_required
 def upload_document(request):
     if request.method == 'POST':
@@ -289,7 +329,7 @@ def upload_document(request):
         form = DocumentForm()
     return redirect('document_list')
 
-
+# Releated Document upload
 @login_required
 def add_related_document(request, pk):
     document = get_object_or_404(Document, pk=pk)
@@ -485,17 +525,30 @@ def clear_notifications(request):
     return redirect('notifications')  
 
 
+def summary_result(request):
+    summary = request.session.get('summary', 'No summary available.')
+    return render(request, 'documents/document_summary.html', {'summary': summary})
+
+
+
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+
+import tensorflow as tf
+tf.get_logger().setLevel('ERROR')
 # Initialize the summarization pipeline with a specific model
-# summarizer = pipeline("summarization", model="facebook/bart-large-cnn", revision="main")
 # summarizer = pipeline("summarization", model="EleutherAI/gpt-neo-1.3B")
-
 summarizer = pipeline("summarization", model="t5-small")
-
+# summarizer = pipeline("summarization", model="facebook/bart-large-cnn", revision="main")
 
 def summarize_pdf(request, document_id):
+    print('docu id', document_id)
     try:
         document = get_object_or_404(Document, pk=document_id)
-        pdf_path = document.file.path  
+        pdf_path = document.file.path 
+        messages.success(request, "Summarization started. Please wait...")
+
 
         # Extract text from the PDF
         text = extract_text_from_pdf(pdf_path)
@@ -550,7 +603,7 @@ def summarize_text(text):
         summary = ""
         for chunk in text_chunks:
             # Summarize each chunk
-            chunk_summary = summarizer(chunk, max_length=100, min_length=50, do_sample=False)
+            chunk_summary = summarizer(chunk, max_length=100, min_length=30, do_sample=False)
             summary += chunk_summary[0]['summary_text'] + " "
         return summary
 
